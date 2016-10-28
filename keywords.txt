@@ -1,5 +1,2 @@
-shooting game
-minimax
-expectimax
-Raiden
-AI agent
+Multi-agent learning
+Video games
