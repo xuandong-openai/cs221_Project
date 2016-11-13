@@ -1,0 +1,75 @@
+Git Cheat Sheat:
+
+To checkout a remote branch
+git checkout -b <local-new-branch> --track <remote>/<branch>
+
+Example: git checkout -b my-local-branch —track origin/master
+
+To push to a specific remote branch
+git push origin <local-branch>:<remote-branch>
+
+Example: a local branch to a remote branch
+git push origin topic/interface-geo-info3:topic/interface-geo-info
+
+Example: current local branch to a remote branch
+git push origin HEAD:topic/interface-geo-info
+
+Fetch:
+git fetch [—all] [remote]
+
+Example: just fetch updates from mote but don’t apply to locally
+git fetch
+
+Pull & rebase:
+git pull --rebase <remote> <remote-branch>
+
+Example: pull from remote branch tag-xyz
+git pull --rebase origin tag-xyz
+
+Delete a local branch:
+git branch -d <local-branch>
+
+To force a delete: git branch -D <local-branch>
+
+Git stashes:
+Stash away changes:
+git stash
+git stash save [message]
+
+List/Show all stashes:
+git stash list
+git stash show [stash]
+Ex. git stash show stash@{1}
+
+Applying/remove stash:
+git stash apply [stash] 
+git stash pop [stash]   <- apply stash + removes from stash stack
+git stash drop [stash]  <- remove from stash stack
+
+
+Git merge:
+For your reference, here's a suggested order of actions:
+1. Checkout and update 16C:
+git checkout release/Stirling16C
+git pull --rebase
+2. Checkout 16D and merge 16C into it:
+git checkout release/Striling16D
+git pull --rebase
+git merge release/Strigling16C
+# Resolve conflicts and commit...
+# ...when done:
+git push
+3. Checkout 16E and merge 16D into it:
+git checkout release/Striling16E
+git pull --rebase
+git merge release/Strigling16D
+# Resolve conflicts and commit...
+# ...when done:
+git push
+4. Checkout master and merge 16E into it:
+git checkout master
+git pull --rebase
+git merge release/Strigling16E
+# Resolve conflicts and commit...
+# ...when done:
+git push
