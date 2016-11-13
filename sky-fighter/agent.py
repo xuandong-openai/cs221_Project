@@ -15,6 +15,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             # check if it's the terminal state
             if state.isWin() or state.isLose() or len(state.getLegalActions(index)) == 0 or depth == 0:
                 return self.evaluationFunction(state), Directions.STOP
+            
             nextIndex = 0 if index == state.getNumAgents() - 1 else index + 1
             nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
             # compute the recursion
