@@ -4,6 +4,15 @@ SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 640
 ENEMY_SIZE = 80
 
+
+class Directions:
+    UP = 'Up'
+    DOWN = 'Down'
+    LEFT = 'Left'
+    RIGHT = 'Right'
+    STOP = 'Stop'
+
+
 class GameState:
     def __init__(self, game):
         self.data = game
