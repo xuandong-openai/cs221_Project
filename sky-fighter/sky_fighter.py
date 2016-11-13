@@ -2,9 +2,13 @@
 
 import pygame, random
 from fileLoader import *
+from pygame.locals import *
 
 images = None
 sounds = None
+
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 640
 
 class Explosion(object):
     def __init__(self):
@@ -29,14 +33,14 @@ class Explosion(object):
                     self.explosion_list.remove(item)
 
 class Enemy(pygame.sprite.Sprite):
-    tick = 15
+    tick = 30 # time before enemy shoots missiles
     projectile_image = None
     def __init__(self,img,projectile_list,tick_delay):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
-        self.rect.topleft = (random.randint(0,525),-50)
+        self.rect.topleft = (random.randint(0,640),-50)
         if self.rect.x < 105:
             self.speed_x = random.randint(0,5)
         elif self.rect.x < 210:
@@ -55,11 +59,32 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
         
+        # enemy can shoot one missile
+        # if self.tick == 0:
+        #     projectile = Projectile(self.rect.center,self.projectile_image)
+        #     projectile.speed_x = self.speed_x
+        #     projectile.speed_y = 10
+        #     self.projectile_list.add(projectile)
+        #     self.tick = self.tick_delay
+        # else:
+        #     self.tick -= 1
+
+        # enemy can shoot multiple missiles
         if self.tick == 0:
-            projectile = Projectile(self.rect.center,self.projectile_image)
-            projectile.speed_x = self.speed_x
-            projectile.speed_y = 10
-            self.projectile_list.add(projectile)
+            projectiles = [None] * 3
+            for i in range(3):
+                projectiles[i] = Projectile(self.rect.center, self.projectile_image)
+
+            myx = self.speed_x
+            projectiles[0].speed_x = myx
+            projectiles[1].speed_x = myx + 5
+            projectiles[2].speed_x = myx - 5
+            # projectiles[3].speed_x = myx + 8
+            # projectiles[4].speed_x = myx - 8
+
+            for i in range(3):
+                projectiles[i].speed_y = 8
+                self.projectile_list.add(projectiles[i])
             self.tick = self.tick_delay
         else:
             self.tick -= 1
@@ -87,19 +112,41 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("files/fighter.png").convert()
+        self.image = pygame.transform.scale(self.image, (64, 64))
         self.image.set_colorkey((0,0,0))
         self.rect = self.image.get_rect()
+        self.rect.topleft = [SCREEN_WIDTH / 2, SCREEN_HEIGHT] # born at the bottom of screen
         self.mask = pygame.mask.from_surface(self.image)
+        self.speed = 10
 
     def update(self):
-        self.rect.center = pygame.mouse.get_pos()
+        #self.rect.center = pygame.mouse.get_pos()
+
+        # using keyboard to move
+        key_pressed = pygame.key.get_pressed()
+        if key_pressed[K_UP]:
+        	if self.rect.top <= 0: self.rect.top = 0            
+        	else: self.rect.top -= self.speed
+        if key_pressed[K_DOWN]:
+        	if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
+        		self.rect.top = SCREEN_HEIGHT - self.rect.height
+        	else:
+        		self.rect.top += self.speed
+        if key_pressed[K_LEFT]:
+        	if self.rect.left <= 0: self.rect.left = 0
+        	else: self.rect.left -= self.speed
+        if key_pressed[K_RIGHT]:
+        	if self.rect.left >= SCREEN_WIDTH - self.rect.width:
+        		self.rect.left = SCREEN_WIDTH - self.rect.width
+        	else:
+        		self.rect.left += self.speed
         
         
 class Game(object):
     display_help_screen = False
     display_credits_screen = False
-    texture_increment = -480
-    tick = 30 # 30 fps = 1 second
+    texture_increment = -SCREEN_HEIGHT
+    tick = 60 # 30 fps = 1 second
     tick_delay = 35
     level = 1
     running = False
@@ -150,7 +197,7 @@ class Game(object):
             self.missile_list.empty()
         if len(self.projectile_list) > 0:
             self.projectile_list.empty()
-        self.tick_delay = 35
+        self.tick_delay = 60 # enemy frequency
         self.level = 1
         self.score_text = self.font.render("Score: 0",True,(255,255,255))
         self.level_text = self.font.render("Level: 1",True,(255,255,255))
@@ -163,21 +210,21 @@ class Game(object):
         self.projectile_list.update()
         
         for missile in self.missile_list:
-            if missile.rect.x < 0 or missile.rect.x > 640:
+            if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
                 self.missile_list.remove(missile)
-            elif missile.rect.y < - 40 or missile.rect.y > 480:
+            elif missile.rect.y < - 40 or missile.rect.y > SCREEN_HEIGHT:
                 self.missile_list.remove(missile)
                 
         for projectile in self.projectile_list:
-            if projectile.rect.x < 0 or projectile.rect.x > 640:
+            if projectile.rect.x < 0 or projectile.rect.x > SCREEN_WIDTH:
                 self.projectile_list.remove(projectile)
-            elif projectile.rect.y < - 20 or projectile.rect.y > 480:
+            elif projectile.rect.y < - 20 or projectile.rect.y > SCREEN_HEIGHT:
                 self.projectile_list.remove(projectile)
                 
         for enemy in self.enemy_list:
-            if enemy.rect.x < -120 or enemy.rect.x > 640:
+            if enemy.rect.x < -120 or enemy.rect.x > SCREEN_WIDTH:
                 self.enemy_list.remove(enemy)
-            elif enemy.rect.y < -100 or enemy.rect.y > 480:
+            elif enemy.rect.y < -100 or enemy.rect.y > SCREEN_HEIGHT:
                 self.enemy_list.remove(enemy)
                 
         for enemy in self.enemy_list:
@@ -225,7 +272,7 @@ class Game(object):
             self.tick -= 1
             
         if self.texture_increment == 0:
-            self.texture_increment = -480
+            self.texture_increment = -SCREEN_HEIGHT
         else:
             self.texture_increment += 1
             
@@ -237,7 +284,9 @@ class Game(object):
         
     def display_frame(self,screen):
         if self.running:
-            screen.blit(images["ocean"],(0,self.texture_increment))
+            #screen.blit(images["ocean"],(0,self.texture_increment))
+            screen.blit(images["background"], (0, 0))
+
             self.missile_list.draw(screen)
             self.projectile_list.draw(screen)
             self.enemy_list.draw(screen)
@@ -247,7 +296,8 @@ class Game(object):
             screen.blit(self.level_text,(285,20))
             self.explosion.draw(screen)
             if self.terminate_count_down <= 90:
-                screen.blit(images["gameOver"],(100,145))
+                #screen.blit(images["gameOver"],(100,145))
+                screen.blit(images["gameover"],(0, 0))
         elif self.display_credits_screen:
             screen.blit(images["introImage"],(0,0))
             screen.blit(images["creditsImage"],(80,100))
@@ -273,7 +323,7 @@ def main():
 
     # Set the width and height of the screen [width, height]
     
-    screen = pygame.display.set_mode((640,480))
+    screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 
     pygame.display.set_caption("Sky Fighter")
     
@@ -300,10 +350,12 @@ def main():
             if event.type == pygame.QUIT: # If user clicked close
                 done = True # Flag that we are done so we exit this loop
             
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                game.shoot()
-                
+            # if event.type == pygame.MOUSEBUTTONDOWN:
+            #     game.shoot()                
             if event.type == pygame.KEYDOWN:
+            	if event.key == pygame.K_SPACE: # using spacebar to shoot
+            		game.shoot()
+
                 if event.key == pygame.K_RETURN:
                     if not game.running:
                         #------The user's menu selection----------------
@@ -342,7 +394,7 @@ def main():
         pygame.display.flip()
 
         # --- Limit to 30 frames per second
-        clock.tick(30)
+        clock.tick(60)
 
     # Close the window and quit.
     # If you forget this line, the program will 'hang'
