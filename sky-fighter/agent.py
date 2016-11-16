@@ -2,14 +2,14 @@ def scoreEvaluationFunction(currentGameState):
     return currentGameState.getScore()
 
 
-class MultiAgentSearchAgent(Agent):
-    def __init__(self, evalFn='scoreEvaluationFunction', depth='2'):
+class Agent:
+    def __init__(self, depth='2'):
         self.index = 0  # Pacman is always agent index 0
         self.evaluationFunction = scoreEvaluationFunction
         self.depth = int(depth)
 
 
-class MinimaxAgent(MultiAgentSearchAgent):
+class MinimaxAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth):
             # check if it's the terminal state
