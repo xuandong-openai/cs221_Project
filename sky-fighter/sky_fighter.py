@@ -59,41 +59,60 @@ class Enemy(pygame.sprite.Sprite):
         self.projectile_list = projectile_list
         self.speed_y = random.randint(3, 7)
         self.tick_delay = tick_delay
-    
+
+    def update(self, direction):
+        # self.rect.center = pygame.mouse.get_pos()
+
+        # using keyboard to move
+        # key_pressed = pygame.key.get_pressed()
+        if direction == Directions.UP:
+            if self.rect.top <= 0:
+                self.rect.top = 0
+            else:
+                self.rect.top -= self.speed
+        if direction == Directions.DOWN:
+            if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
+                self.rect.top = SCREEN_HEIGHT - self.rect.height
+            else:
+                self.rect.top += self.speed
+        if direction == Directions.LEFT:
+            if self.rect.left <= 0:
+                self.rect.left = 0
+            else:
+                self.rect.left -= self.speed
+        if direction == Directions.RIGHT:
+            if self.rect.left >= SCREEN_WIDTH - self.rect.width:
+                self.rect.left = SCREEN_WIDTH - self.rect.width
+            else:
+                self.rect.left += self.speed
+        self.updateProjectiles()
+
     def update(self):
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
-        
-        # enemy can shoot one missile
-        # if self.tick == 0:
-        #     projectile = Projectile(self.rect.center,self.projectile_image)
-        #     projectile.speed_x = self.speed_x
-        #     projectile.speed_y = 10
-        #     self.projectile_list.add(projectile)
-        #     self.tick = self.tick_delay
-        # else:
-        #     self.tick -= 1
+        self.updateProjectiles()
         
         # enemy can shoot multiple missiles
+
+    def updateProjectiles(self):
         if self.tick == 0:
             projectiles = [None] * 3
             for i in range(3):
                 projectiles[i] = Projectile(self.rect.center, self.projectile_image)
-            
+
             myx = self.speed_x
             projectiles[0].speed_x = myx
             projectiles[1].speed_x = myx + 5
             projectiles[2].speed_x = myx - 5
             # projectiles[3].speed_x = myx + 8
             # projectiles[4].speed_x = myx - 8
-            
+
             for i in range(3):
                 projectiles[i].speed_y = 8
                 self.projectile_list.add(projectiles[i])
             self.tick = self.tick_delay
         else:
             self.tick -= 1
-
 
 class Missile(pygame.sprite.Sprite):
     speed_x = 0
@@ -128,28 +147,27 @@ class Player(pygame.sprite.Sprite):
         self.speed = 10
         self.agent = agent.MinimaxAgent()
     
-    def update(self, currentState):
+    def update(self, direction):
         # self.rect.center = pygame.mouse.get_pos()
         
         # using keyboard to move
         # key_pressed = pygame.key.get_pressed()
-        key_pressed = self.agent.getAction(currentState)
-        if key_pressed[K_UP]:
+        if direction == Directions.UP:
             if self.rect.top <= 0:
                 self.rect.top = 0
             else:
                 self.rect.top -= self.speed
-        if key_pressed[K_DOWN]:
+        if direction == Directions.DOWN:
             if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
                 self.rect.top = SCREEN_HEIGHT - self.rect.height
             else:
                 self.rect.top += self.speed
-        if key_pressed[K_LEFT]:
+        if direction == Directions.LEFT:
             if self.rect.left <= 0:
                 self.rect.left = 0
             else:
                 self.rect.left -= self.speed
-        if key_pressed[K_RIGHT]:
+        if direction == Directions.RIGHT:
             if self.rect.left >= SCREEN_WIDTH - self.rect.width:
                 self.rect.left = SCREEN_WIDTH - self.rect.width
             else:
