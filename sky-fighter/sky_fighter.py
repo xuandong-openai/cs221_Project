@@ -4,6 +4,7 @@ import pygame, random, agent
 from game import GameState
 from fileLoader import *
 from pygame.locals import *
+from agent import Directions
 
 images = None
 sounds = None
@@ -142,7 +143,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (64, 64))
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
-        self.rect.topleft = [SCREEN_WIDTH / 2, SCREEN_HEIGHT]  # born at the bottom of screen
+        self.rect.topleft = [SCREEN_WIDTH / 2, SCREEN_HEIGHT - 64]  # born at the bottom of screen
         self.mask = pygame.mask.from_surface(self.image)
         self.speed = 10
         self.agent = agent.MinimaxAgent()
@@ -151,7 +152,16 @@ class Player(pygame.sprite.Sprite):
         # self.rect.center = pygame.mouse.get_pos()
         
         # using keyboard to move
-        # key_pressed = pygame.key.get_pressed()
+        key_pressed = pygame.key.get_pressed()
+        if key_pressed is not None:
+            if key_pressed[K_UP]:
+                direction = Directions.UP
+            elif key_pressed[K_DOWN]:
+                direction = Directions.DOWN
+            elif key_pressed[K_LEFT]:
+                direction = Directions.LEFT
+            elif key_pressed[K_RIGHT]:
+                direction = Directions.RIGHT
         if direction == Directions.UP:
             if self.rect.top <= 0:
                 self.rect.top = 0
@@ -240,7 +250,8 @@ class Game(object):
         self.enemy_list.update()
         self.missile_list.update()
         self.projectile_list.update()
-        
+        self.score += 1
+
         for missile in self.missile_list:
             if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
                 self.missile_list.remove(missile)
@@ -264,18 +275,18 @@ class Game(object):
             if len(hit_list) > 0:
                 self.explosion.add((enemy.rect.x + 20, enemy.rect.y + 20))
                 self.enemy_list.remove(enemy)
-                self.score += 1
+                self.score += 10
                 if self.level == 1:
-                    if self.score == 50:
+                    if self.score == 500:
                         self.level += 1
                         self.tick_delay = 25
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
                 elif self.level == 2:
-                    if self.score == 100:
+                    if self.score == 1000:
                         self.level += 1
                         self.tick_delay = 15
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
-                self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
+                #self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
         
         hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
         if len(hit_list) > 0 and not self.terminate:
@@ -313,6 +324,7 @@ class Game(object):
                 self.running = False
             else:
                 self.terminate_count_down -= 1
+        self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
     
     def display_frame(self, screen):
         if self.running:

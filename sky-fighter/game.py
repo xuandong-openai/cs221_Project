@@ -1,5 +1,4 @@
 import pygame
-from sky_fighter import Game
 
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 640
@@ -14,10 +13,10 @@ class Directions:
 	STOP = 'Stop'
 
 
-class GameState:
+class GameState(object):
 	def __init__(self, game):
 		self.data = game
-		self.getPositions(self)
+		self.getPositions()
 
 	def getPositions(self):
 		i = 1
