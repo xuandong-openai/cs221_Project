@@ -1,4 +1,30 @@
-Git Cheat Sheat:
+﻿Git Cheat Sheat:
+
+git status
+
+
+git pull
+
+git checkout -b branchname
+git branch
+
+git diff master
+git checkout master
+
+git add .
+git commit -m ""
+
+git checkout master
+git pull
+git checkout branchname
+git rebase master
+git checkout master
+git merge branchname
+
+git log
+
+git branch -d branchname
+git push
 
 To checkout a remote branch
 git checkout -b <local-new-branch> --track <remote>/<branch>
