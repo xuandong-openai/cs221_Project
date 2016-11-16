@@ -5,6 +5,10 @@ from game import GameState
 from fileLoader import *
 from pygame.locals import *
 from agent import Directions
+from agent import MinimaxAgent
+import sys
+
+sys.setrecursionlimit(10000)
 
 images = None
 sounds = None
@@ -160,10 +164,11 @@ class Player(pygame.sprite.Sprite):
         self.speed = PLAYER_SPEED
         self.agent = agent.MinimaxAgent()
     
-    def update(self, direction):
+    def update(self, state):
         # self.rect.center = pygame.mouse.get_pos()
         
         # using keyboard to move
+        direction = self.agent.getAction(state)
         key_pressed = pygame.key.get_pressed()
         if key_pressed is not None:
             if key_pressed[K_UP]:
@@ -258,6 +263,7 @@ class Game(object):
     
     def run_game(self):
         if not self.terminate:
+            state = GameState(self)
             self.player.update(state)
         self.enemy_list.update()
         self.missile_list.update()
@@ -302,6 +308,7 @@ class Game(object):
         hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
+            self.score = -float('inf')
             self.explosion.add(self.player.rect.topleft)
             sounds["plane"].stop()
             for enemy in hit_list:
@@ -311,6 +318,7 @@ class Game(object):
         hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
+            self.score = -float('inf')
             self.explosion.add(self.player.rect.topleft)
             sounds["plane"].stop()
             for projectile in hit_list:
