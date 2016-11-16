@@ -33,12 +33,24 @@ class GameState(object):
 		self.positions = res
 		return res
 
-	def getLegalActions(self):
-		if self.isWin or self.isLose:
-			return []
-		currPosition = (self.player.rect.x, self.player.rect.y)
-		actions = []
-		pass
+	def getLegalActions(self, index):
+		res = []
+		player = self.data.player
+		curPos = (player.rect.top, player.rect.left)
+		playerHeight = player.rect.height
+		playerWidth = player.rect.width
+		if curPos[0] > 0:
+			res.append(Directions.UP)
+		if curPos[0] < SCREEN_HEIGHT - playerHeight:
+			res.append(Directions.DOWN)
+		if curPos[1] > 0:
+			res.append(Directions.LEFT)
+		if curPos[1] < SCREEN_WIDTH - playerWidth:
+			res.append(Directions.RIGHT)
+		return res
+
+	def getScore(self):
+		return self.data.score
 
 	def getPlayerPosition(self):
 		return self.player.rect.x, self.player.rect.y
@@ -99,17 +111,17 @@ class GameState(object):
 		return len(self.data.enemy_list)
 
 	def getNumAgents(self):
-		return self.data.enemy_list + 1
+		return len(self.data.enemy_list) + 1
 
 	def generateSuccessor(self, index, action):
-		nextState = GameState(self)
+		nextState = GameState(self.data)
 		game = nextState.data
 
 		for projectile in game.projectile_list:
 			projectile.update()
 
 		if index == 0:
-			game.player.update(action)
+			game.player.update(nextState)
 		else:
 			movedEnemy = game.enemy_list[index]
 			movedEnemy.update(action)
