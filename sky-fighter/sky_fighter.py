@@ -10,8 +10,21 @@ images = None
 sounds = None
 state = None
 
+# define game constants
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 640
+MISSILE_SIZE = 40
+PROJECTILE_SIZE = 20
+ENEMY_SIZE = 80
+ENEMY_SHOOT_FREEZETIME = 30
+ENEMY_SPRAY_NUM = 3 # number of spray projectiles
+PLAYER_SIZE = 64
+PLAYER_SPEED = 10 # moving speed
+GAME_FPS = 60
+LEVEL1_SCORE = 500
+LEVEL2_SCORE = 1000
+LEVEL1_ENEMY_FREQ = 25
+LEVEL2_ENEMY_FREQ = 15
 
 
 class Explosion(object):
@@ -38,7 +51,7 @@ class Explosion(object):
 
 
 class Enemy(pygame.sprite.Sprite):
-    tick = 30  # time before enemy shoots missiles
+    tick = ENEMY_SHOOT_FREEZETIME  # time before enemy shoots missiles
     projectile_image = None
     
     def __init__(self, img, projectile_list, tick_delay):
@@ -97,20 +110,19 @@ class Enemy(pygame.sprite.Sprite):
 
     def updateProjectiles(self):
         if self.tick == 0:
-            projectiles = [None] * 3
-            for i in range(3):
+            projectiles = [None] * ENEMY_SPRAY_NUM
+            for i in range(ENEMY_SPRAY_NUM):
                 projectiles[i] = Projectile(self.rect.center, self.projectile_image)
-
             myx = self.speed_x
-            projectiles[0].speed_x = myx
-            projectiles[1].speed_x = myx + 5
-            projectiles[2].speed_x = myx - 5
-            # projectiles[3].speed_x = myx + 8
-            # projectiles[4].speed_x = myx - 8
-
-            for i in range(3):
+            diff = 0
+            for i in range(ENEMY_SPRAY_NUM):
+                if i % 2 == 0:
+                    projectiles[i].speed_x = myx - diff
+                else:
+                    projectiles[i].speed_x = myx + diff
                 projectiles[i].speed_y = 8
                 self.projectile_list.add(projectiles[i])
+                diff -= 4
             self.tick = self.tick_delay
         else:
             self.tick -= 1
@@ -140,12 +152,12 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("files/fighter.png").convert()
-        self.image = pygame.transform.scale(self.image, (64, 64))
+        self.image = pygame.transform.scale(self.image, (PLAYER_SIZE, PLAYER_SIZE))
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
-        self.rect.topleft = [SCREEN_WIDTH / 2, SCREEN_HEIGHT - 64]  # born at the bottom of screen
+        self.rect.bottomright = [SCREEN_WIDTH / 2, SCREEN_HEIGHT] # born at the bottom of screen
         self.mask = pygame.mask.from_surface(self.image)
-        self.speed = 10
+        self.speed = PLAYER_SPEED
         self.agent = agent.MinimaxAgent()
     
     def update(self, direction):
@@ -188,7 +200,7 @@ class Game(object):
     display_help_screen = False
     display_credits_screen = False
     texture_increment = -SCREEN_HEIGHT
-    tick = 60  # 30 fps = 1 second
+    tick = GAME_FPS  # 30 fps = 1 second
     tick_delay = 35
     level = 1
     running = False
@@ -239,7 +251,7 @@ class Game(object):
             self.missile_list.empty()
         if len(self.projectile_list) > 0:
             self.projectile_list.empty()
-        self.tick_delay = 60  # enemy frequency
+        self.tick_delay = GAME_FPS  # enemy frequency
         self.level = 1
         self.score_text = self.font.render("Score: 0", True, (255, 255, 255))
         self.level_text = self.font.render("Level: 1", True, (255, 255, 255))
@@ -255,19 +267,19 @@ class Game(object):
         for missile in self.missile_list:
             if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
                 self.missile_list.remove(missile)
-            elif missile.rect.y < - 40 or missile.rect.y > SCREEN_HEIGHT:
+            elif missile.rect.y < - MISSILE_SIZE or missile.rect.y > SCREEN_HEIGHT:
                 self.missile_list.remove(missile)
         
         for projectile in self.projectile_list:
             if projectile.rect.x < 0 or projectile.rect.x > SCREEN_WIDTH:
                 self.projectile_list.remove(projectile)
-            elif projectile.rect.y < - 20 or projectile.rect.y > SCREEN_HEIGHT:
+            elif projectile.rect.y < - PROJECTILE_SIZE or projectile.rect.y > SCREEN_HEIGHT:
                 self.projectile_list.remove(projectile)
         
         for enemy in self.enemy_list:
-            if enemy.rect.x < -120 or enemy.rect.x > SCREEN_WIDTH:
+            if enemy.rect.x < -ENEMY_SIZE or enemy.rect.x > SCREEN_WIDTH:
                 self.enemy_list.remove(enemy)
-            elif enemy.rect.y < -100 or enemy.rect.y > SCREEN_HEIGHT:
+            elif enemy.rect.y < -ENEMY_SIZE or enemy.rect.y > SCREEN_HEIGHT:
                 self.enemy_list.remove(enemy)
         
         for enemy in self.enemy_list:
@@ -277,16 +289,15 @@ class Game(object):
                 self.enemy_list.remove(enemy)
                 self.score += 10
                 if self.level == 1:
-                    if self.score == 500:
+                    if self.score == LEVEL1_SCORE:
                         self.level += 1
-                        self.tick_delay = 25
+                        self.tick_delay = LEVEL1_ENEMY_FREQ
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
                 elif self.level == 2:
-                    if self.score == 1000:
+                    if self.score == LEVEL2_SCORE:
                         self.level += 1
-                        self.tick_delay = 15
+                        self.tick_delay = LEVEL2_ENEMY_FREQ
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
-                #self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
         
         hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
         if len(hit_list) > 0 and not self.terminate:
@@ -439,7 +450,7 @@ def main():
         pygame.display.flip()
         
         # --- Limit to 30 frames per second
-        clock.tick(60)
+        clock.tick(GAME_FPS)
     
     # Close the window and quit.
     # If you forget this line, the program will 'hang'
