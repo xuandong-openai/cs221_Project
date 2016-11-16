@@ -1,3 +1,5 @@
+from game import Directions
+
 def scoreEvaluationFunction(currentGameState):
     return currentGameState.getScore()
 
