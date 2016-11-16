@@ -1,3 +1,7 @@
 .idea/
 .DS_Store
+<<<<<<< HEAD
 sky-fighter/*.pyc
+=======
+*/*.pyc
+>>>>>>> added something
