@@ -12,9 +12,28 @@ class Directions:
 
 
 class GameState(object):
+    enemy_list = pygame.sprite.Group()
+    missile_list = pygame.sprite.Group()
+    projectile_list = pygame.sprite.Group()
+    
     def __init__(self, game=None, previousState=None, currentAgent=0):
         if game is not None:
             self.player = game.player
+            # self.deepCopy(self.enemy_list, game.enemy_list)
+            # self.deepCopy(self.missile_list, game.missile_list)
+            # self.deepCopy(self.projectile_list, game.projectile_list)
+            # self.enemy_list = deepcopy(game.enemy_list)
+            # self.missile_list = deepcopy(game.missile_list)
+            # self.projectile_list = deepcopy(game.projectile_list)
+            # self.enemy_list = pygame.sprite.Group()
+            # for enemy in game.enemy_list:
+            #     self.enemy_list.add(deepcopy(enemy))
+            # self.missile_list = pygame.sprite.Group()
+            # for item in game.missile_list:
+            #     self.enemy_list.add(deepcopy(item))
+            # self.enemy_list = pygame.sprite.Group()
+            # for enemy in game.projectile_list:
+            #     self.enemy_list.add(deepcopy(enemy))
             self.enemy_list = game.enemy_list
             self.missile_list = game.missile_list
             self.projectile_list = game.projectile_list
@@ -24,15 +43,26 @@ class GameState(object):
             self.enemy_list = previousState.enemy_list
             self.missile_list = previousState.missile_list
             self.projectile_list = previousState.projectile_list
+            # self.deepCopy(self.enemy_list, previousState.enemy_list)
+            # self.deepCopy(self.missile_list, previousState.missile_list)
+            # self.deepCopy(self.projectile_list, previousState.projectile_list)
+            # self.enemy_list = deepcopy(previousState.enemy_list)
+            # self.missile_list = deepcopy(previousState.missile_list)
+            # self.projectile_list = deepcopy(previousState.projectile_list)
             self.score = previousState.score
             
         self.currentAgent = currentAgent
-        if self.currentAgent == 0:
-            for missile in self.missile_list:
-                missile.update()
-            for projectile in self.projectile_list:
-                projectile.update()
-                
+        # if self.currentAgent == 0:
+        #     for missile in self.missile_list:
+        #         missile.update()
+        #     for projectile in self.projectile_list:
+        #         projectile.update()
+        
+    def deepCopy(self, target, list):
+        # target = pygame.sprite.Group()
+        for item in list:
+            target.add(deepcopy(item))
+            
     def getProjPositions(self):
         res = []
         for projectile in self.projectile_list:
@@ -92,16 +122,19 @@ class GameState(object):
     
     def isLose(self):
         hitList = pygame.sprite.spritecollide(self.getPlayer(), self.getEnemies(), False, pygame.sprite.collide_mask)
+        # hitList = pygame.sprite.spritecollide(self.getPlayer(), self.getEnemies(), False)
         if len(hitList) > 0:
             return True
         hitList = pygame.sprite.spritecollide(self.getPlayer(), self.getProjectiles(), False, pygame.sprite.collide_mask)
+        # hitList = pygame.sprite.spritecollide(self.getPlayer(), self.getProjectiles(), False)
         if len(hitList) > 0:
             return True
         return False
     
     def checkEnemyDeath(self, agentIndex):
-        hit_list = pygame.sprite.spritecollide(self.getFlight(agentIndex), self.missile_list, True, pygame.sprite.collide_mask)
-        return True if len(hit_list) > 0 else False
+        hitList = pygame.sprite.spritecollide(self.getFlight(agentIndex), self.missile_list, True, pygame.sprite.collide_mask)
+        # hitList = pygame.sprite.spritecollide(self.getFlight(agentIndex), self.missile_list, True)
+        return True if len(hitList) > 0 else False
     
     def removeEnemy(self, agentIndex):
         for enemy, index in self.enemy_list:

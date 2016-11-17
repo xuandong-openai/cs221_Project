@@ -291,7 +291,8 @@ class Game(object):
                         self.tick_delay = self.level2EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
         
-        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
+        # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
+        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
@@ -300,7 +301,8 @@ class Game(object):
                 self.explosion.add(enemy.rect.topleft)
                 self.enemy_list.remove(enemy)
         
-        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
+        # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
+        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
