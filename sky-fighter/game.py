@@ -124,7 +124,7 @@ class GameState(object):
 
 			game.player.update(action)
 		else:
-			print index
+			# print index
 			for enemy in game.enemy_list:
 				index -= 1
 				if index == 0:

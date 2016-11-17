@@ -6,21 +6,24 @@ from fileLoader import *
 from pygame.locals import *
 from agent import Directions
 from agent import MinimaxAgent
-import sys
-import copy
 
 images = None
 sounds = None
 state = None
 
 # define game constants
+GAME_FPS = 60
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 640
+
 MISSILE_SIZE = 40
+
 PROJECTILE_SIZE = 20
+
 ENEMY_SIZE = 80
+
 PLAYER_SIZE = 64
-GAME_FPS = 60
+PLAYER_SPEED = 10
 
 
 class Explosion(object):
@@ -70,43 +73,40 @@ class Enemy(pygame.sprite.Sprite):
         self.projectile_list = projectile_list
         self.speed_y = random.randint(3, 7)
         self.tick_delay = tick_delay
-        self.sprayNum = 3 # number of spray projectiles
+        self.sprayNum = 3  # number of spray projectiles
         self.sprayDiff = 4
-
+    
     def updateWithAction(self, direction):
         # self.rect.center = pygame.mouse.get_pos()
-
         # using keyboard to move
-        # key_pressed = pygame.key.get_pressed()
         if direction == Directions.UP:
             if self.rect.top <= 0:
                 self.rect.top = 0
             else:
                 self.rect.top -= self.speed_y
-        if direction == Directions.DOWN:
+        elif direction == Directions.DOWN:
             if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
                 self.rect.top = SCREEN_HEIGHT - self.rect.height
             else:
                 self.rect.top += self.speed_y
-        if direction == Directions.LEFT:
+        elif direction == Directions.LEFT:
             if self.rect.left <= 0:
                 self.rect.left = 0
             else:
                 self.rect.left -= self.speed_x
-        if direction == Directions.RIGHT:
+        elif direction == Directions.RIGHT:
             if self.rect.left >= SCREEN_WIDTH - self.rect.width:
                 self.rect.left = SCREEN_WIDTH - self.rect.width
             else:
                 self.rect.left += self.speed_x
         self.updateProjectiles()
-
+    
     def update(self):
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
         self.updateProjectiles()
-        
-        # enemy can shoot multiple missiles
-
+    
+    # enemy can shoot multiple missiles
     def updateProjectiles(self):
         if self.tick == 0:
             projectiles = [None] * self.sprayNum
@@ -124,6 +124,7 @@ class Enemy(pygame.sprite.Sprite):
             self.tick = self.tick_delay
         else:
             self.tick -= 1
+
 
 class Missile(pygame.sprite.Sprite):
     speed_x = 0
@@ -154,15 +155,15 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (PLAYER_SIZE, PLAYER_SIZE))
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
-        self.rect.bottomright = [SCREEN_WIDTH / 2, SCREEN_HEIGHT] # born at the bottom of screen
+        self.rect.bottomright = [SCREEN_WIDTH / 2 - PLAYER_SIZE / 2, SCREEN_HEIGHT]  # born at the bottom of screen
         self.mask = pygame.mask.from_surface(self.image)
-        self.speed = 10
+        self.speed = PLAYER_SPEED
     
     def update(self, direction):
         # self.rect.center = pygame.mouse.get_pos()
-        
         # using keyboard to move
         key_pressed = pygame.key.get_pressed()
+        # update direction according to key_pressed
         if key_pressed is not None:
             if key_pressed[K_UP]:
                 direction = Directions.UP
@@ -172,6 +173,7 @@ class Player(pygame.sprite.Sprite):
                 direction = Directions.LEFT
             elif key_pressed[K_RIGHT]:
                 direction = Directions.RIGHT
+                
         if direction == Directions.UP:
             if self.rect.top <= 0:
                 self.rect.top = 0
@@ -233,7 +235,7 @@ class Game(object):
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
         self.agent = agent.MinimaxAgent()
-
+    
     def scroll_menu_up(self):
         if self.menu_choice > 0:
             self.menu_choice -= 1
@@ -268,7 +270,7 @@ class Game(object):
         self.missile_list.update()
         self.projectile_list.update()
         self.score += 1
-
+        
         for missile in self.missile_list:
             if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
                 self.missile_list.remove(missile)
@@ -457,7 +459,7 @@ def main():
         
         # --- Limit to 30 frames per second
         clock.tick(GAME_FPS)
-
+    
     # Close the window and quit.
     # If you forget this line, the program will 'hang'
     # on exit if running from IDLE.

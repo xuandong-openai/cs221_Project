@@ -32,9 +32,9 @@ class MinimaxAgent(Agent):
 
 			chosenValue = max(choices) if index == 0 else min(choices)
 			indices = [i for i in range(len(choices)) if choices[i][0] == chosenValue[0]]
-			print choices
-			print chosenValue
-			print indices
+			# print choices
+			# print chosenValue
+			# print indices
 			chosenIndex = random.choice(indices)  # Pick randomly among max
 
 			return chosenValue, legalActions[chosenIndex]
