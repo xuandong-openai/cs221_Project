@@ -32,6 +32,14 @@ class GameState(object):
                 missile.update()
             for projectile in self.projectile_list:
                 projectile.update()
+                
+    def getProjPositions(self):
+        res = []
+        for projectile in self.projectile_list:
+            res.append((projectile.rect.x, projectile.rect.y))
+            
+    def getPlayerPosition(self):
+        return self.player.rect.x, self.player.rect.y
     
     def getEnemyPositions(self):
         res = []
