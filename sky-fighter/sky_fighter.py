@@ -326,7 +326,7 @@ class Game(object):
             self.texture_increment += 1
         
         if self.terminate:
-            self.score = 0
+            self.score = -10000
             if self.terminate_count_down == 0:
                 self.running = False
             else:

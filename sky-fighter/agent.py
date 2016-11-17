@@ -1,35 +1,59 @@
 from game import Directions
 import random
+from vars import *
+import math
 
-
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 640
 
 def scoreEvaluationFunction(currentGameState):
     enemyPos = currentGameState.getEnemyPositions()
     projPos = currentGameState.getProjPositions()
     pos = currentGameState.getPlayerPosition()
-    enemyPosDiff = [abs(enemy[0] - pos[0]) + abs(enemy[1] - pos[1]) for enemy in enemyPos]
-    projPosDiff = [abs(proj[0] - pos[0]) + abs(proj[1] - pos[1]) for proj in projPos]
-    closestEnemy = min(enemyPosDiff) if len(enemyPos) != 0 else SCREEN_HEIGHT
-    if closestEnemy > SCREEN_HEIGHT / 4:
-        closestEnemy = SCREEN_HEIGHT / 4
-    closestProj = min(projPosDiff) if len(projPos) != 0 else SCREEN_HEIGHT
-    if closestProj > SCREEN_HEIGHT / 2:
-        closestProj = SCREEN_HEIGHT / 2
-    threatDistScore = closestEnemy + 20 * closestProj
+    
+    def getSquaredDistance(pos1, pos2):
+        return (pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2
+
+    enemyPosDiff = [getSquaredDistance(pos, enemy) for enemy in enemyPos if enemy[1] < pos[1] + PLAYER_SIZE]
+    projPosDiff = [getSquaredDistance(pos, proj) for proj in projPos if proj[1] < pos[1] + PLAYER_SIZE]
+
+    # calculate the number of threats in a range centered at player's position
+    radius = 256
+    closestEnemy = 0
+    for diff in enemyPosDiff:
+        if diff < (2 * radius)**2:            
+            closestEnemy += radius**2 / diff
+    closestProj = 0
+    for diff in projPosDiff:
+        if diff < (2 * radius)**2:
+            closestProj += radius**2 / diff
+
+    threatDistScore = -10 * closestEnemy - 100 * closestProj
+
+    # if len(projPosDiff) > 0:
+    #     print math.sqrt(min(projPosDiff))
 
     # punish the score if flying too wide
-    distToCenter = abs(pos[0] - SCREEN_WIDTH / 2)
-    distToCenterScore = -distToCenter
+    distToCenterScore = -abs(pos[0] - (SCREEN_WIDTH - PLAYER_SIZE) / 2)**2 / 32 - abs(int(0.85 * SCREEN_HEIGHT) - pos[1]) / 64
 
-    totalScore = (2 * currentGameState.getScore(), threatDistScore, distToCenterScore)
-    # print totalScore
+    # current game score
+    gameScore = 2 * currentGameState.getScore()
+
+    # cross aaaaaaaaaaaaaaaa got dammit!!!
+    bypassScore = -1000 *(len(projPosDiff) + len(enemyPosDiff))
+
+    # horizontal distances to enemies
+    horizontalDist = [abs(pos[0] - enemy[0]) for enemy in enemyPos if enemy[1] < pos[1] + PLAYER_SIZE]
+    if len(horizontalDist) == 0:
+        horizontalScore = SCREEN_WIDTH
+    else:
+        horizontalScore = sum(horizontalDist) / 4
+
+    totalScore = (gameScore, threatDistScore, distToCenterScore, horizontalScore)
+    #print totalScore, sum(totalScore)
     return sum(totalScore)
 
 
 class Agent:
-    def __init__(self, depth='1'):
+    def __init__(self, depth='2'):
         self.index = 0  # Pacman is always agent index 0
         self.evaluationFunction = scoreEvaluationFunction
         self.depth = int(depth)

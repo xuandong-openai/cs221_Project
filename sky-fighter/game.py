@@ -165,7 +165,7 @@ class GameState(object):
         if agentIndex == 0:
             nextState.getPlayer().update(action)
             if nextState.isLose():
-                nextState.score = 0
+                nextState.score = -10000
         # else:
         #     nextState.getFlight(agentIndex).update(action)
         #     isDead = nextState.checkEnemyDeath(agentIndex)
