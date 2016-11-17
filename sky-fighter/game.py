@@ -208,7 +208,7 @@ class GameState(object):
             enemy = nextState.getFlight(agentIndex)
             enemy.updateFlight(action)
             # isDead = nextState.checkEnemyDeath(agentIndex)
-            nextState.score += ENEMY_HIT_SCORE
+            nextState.score += SCORE_HIT_ENEMY
             # if isDead:
             #     nextState.removeEnemy(agentIndex)
             #     nextState.currentAgent -= 1
