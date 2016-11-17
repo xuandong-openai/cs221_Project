@@ -37,6 +37,7 @@ class GameState(object):
         res = []
         for projectile in self.projectile_list:
             res.append((projectile.rect.x, projectile.rect.y))
+        return res
             
     def getPlayerPosition(self):
         return self.player.rect.x, self.player.rect.y
@@ -140,7 +141,7 @@ class GameState(object):
         if agentIndex == 0:
             nextState.getPlayer().update(action)
             if nextState.isLose():
-                nextState.score = -float('inf')
+                nextState.score = 0
         else:
             nextState.getFlight(agentIndex).update(action)
             isDead = nextState.checkEnemyDeath(agentIndex)

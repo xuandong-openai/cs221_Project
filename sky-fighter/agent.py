@@ -21,9 +21,9 @@ def scoreEvaluationFunction(currentGameState):
 
     # punish the score if flying too wide
     distToCenter = abs(pos[0] - SCREEN_WIDTH / 2)
-    distToCenterScore = -2 * distToCenter
+    distToCenterScore = -distToCenter
 
-    totalScore = (currentGameState.getScore(), threatDistScore, distToCenterScore)
+    totalScore = (2 * currentGameState.getScore(), threatDistScore, distToCenterScore)
     print totalScore
     return sum(totalScore)
 
@@ -38,7 +38,7 @@ class Agent:
 class MinimaxAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth):
-            print gameState.getNumProjectile()
+            # print gameState.getNumProjectile()
             # check if it's the terminal state
             if state.isWin() or state.isLose() or len(state.getLegalActions(index)) == 0 or depth == 0:
                 return self.evaluationFunction(state), Directions.STOP
