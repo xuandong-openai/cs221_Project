@@ -2,7 +2,6 @@ import pygame
 from vars import *
 from copy import deepcopy
 
-
 class Directions:
     UP = 'Up'
     DOWN = 'Down'
@@ -12,48 +11,48 @@ class Directions:
 
 
 class GameState(object):
-    enemy_list = pygame.sprite.Group()
-    missile_list = pygame.sprite.Group()
-    projectile_list = pygame.sprite.Group()
-    
     def __init__(self, game=None, previousState=None, currentAgent=0):
+        self.enemy_list = pygame.sprite.Group()
+        self.missile_list = pygame.sprite.Group()
+        self.projectile_list = pygame.sprite.Group()
         if game is not None:
-            self.player = game.player
-            # self.deepCopy(self.enemy_list, game.enemy_list)
-            # self.deepCopy(self.missile_list, game.missile_list)
-            # self.deepCopy(self.projectile_list, game.projectile_list)
-            # self.enemy_list = deepcopy(game.enemy_list)
-            # self.missile_list = deepcopy(game.missile_list)
-            # self.projectile_list = deepcopy(game.projectile_list)
-            self.enemy_list = game.enemy_list.copy()
-            self.missile_list = game.missile_list.copy()
-            self.projectile_list = game.projectile_list.copy()
+            self.player = deepcopy(game.player)
             self.score = game.score
+            for item in game.enemy_list:
+                tmp = deepcopy(item)
+                tmp.projectile_list = self.projectile_list
+                self.enemy_list.add(tmp)
+
+            for item in game.projectile_list:
+                tmp = deepcopy(item)
+                self.projectile_list.add(tmp)
+
+            for item in game.missile_list:
+                tmp = deepcopy(item)
+                self.missile_list.add(tmp)
         elif previousState is not None:
-            self.player = previousState.player
-            self.enemy_list = previousState.enemy_list.copy()
-            self.missile_list = previousState.missile_list.copy()
-            self.projectile_list = previousState.projectile_list.copy()
-            # self.deepCopy(self.enemy_list, previousState.enemy_list)
-            # self.deepCopy(self.missile_list, previousState.missile_list)
-            # self.deepCopy(self.projectile_list, previousState.projectile_list)
-            # self.enemy_list = deepcopy(previousState.enemy_list)
-            # self.missile_list = deepcopy(previousState.missile_list)
-            # self.projectile_list = deepcopy(previousState.projectile_list)
+            self.player = deepcopy(previousState.player)
             self.score = previousState.score
+            for item in previousState.enemy_list:
+                tmp = deepcopy(item)
+                tmp.projectile_list = self.projectile_list
+                self.enemy_list.add(tmp)
+
+            for item in previousState.projectile_list:
+                tmp = deepcopy(item)
+                self.projectile_list.add(tmp)
+
+            for item in previousState.missile_list:
+                tmp = deepcopy(item)
+                self.missile_list.add(tmp)
             
         self.currentAgent = currentAgent
-        # if self.currentAgent == 0:
-        #     for missile in self.missile_list:
-        #         missile.update()
-        #     for projectile in self.projectile_list:
-        #         projectile.update()
+        if self.currentAgent == 0:
+            for missile in self.missile_list:
+                missile.update()
+            for projectile in self.projectile_list:
+                projectile.update()
         
-    def deepCopy(self, target, list):
-        # target = pygame.sprite.Group()
-        for item in list:
-            target.add(deepcopy(item))
-            
     def getProjPositions(self):
         res = []
         for projectile in self.projectile_list:
@@ -166,11 +165,11 @@ class GameState(object):
             nextState.getPlayer().update(action)
             if nextState.isLose():
                 nextState.score = -10000
-        # else:
-        #     nextState.getFlight(agentIndex).update(action)
-        #     isDead = nextState.checkEnemyDeath(agentIndex)
-        #     nextState.score += ENEMY_HIT_SCORE
-        #     if isDead:
-        #         nextState.removeEnemy(agentIndex)
-        #         nextState.currentAgent -= 1
+        else:
+            nextState.getFlight(agentIndex).update(action)
+            isDead = nextState.checkEnemyDeath(agentIndex)
+            nextState.score += SCORE_HIT_ENEMY
+            if isDead:
+                nextState.removeEnemy(agentIndex)
+                nextState.currentAgent -= 1
         return nextState
