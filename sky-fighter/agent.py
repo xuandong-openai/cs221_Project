@@ -24,7 +24,7 @@ def scoreEvaluationFunction(currentGameState):
     distToCenterScore = -distToCenter
 
     totalScore = (2 * currentGameState.getScore(), threatDistScore, distToCenterScore)
-    print totalScore
+    # print totalScore
     return sum(totalScore)
 
 
