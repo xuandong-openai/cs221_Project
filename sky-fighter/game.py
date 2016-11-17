@@ -33,6 +33,12 @@ class GameState(object):
             for projectile in self.projectile_list:
                 projectile.update()
     
+    def getEnemyPositions(self):
+        res = []
+        for enemy in self.enemy_list:
+            res.append((enemy.rect.x, enemy.rect.y))
+        return res
+    
     def getFlight(self, agentIndex):
         if agentIndex == 0:
             return self.player
