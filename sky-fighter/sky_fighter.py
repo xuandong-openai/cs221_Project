@@ -228,7 +228,7 @@ class Game(object):
     def start_game(self):
         self.running = True
         sounds["plane"].play(-1)  # Start the plane sound;
-        self.terminate_count_down = 150
+        self.terminate_count_down = 100
         self.terminate = False
         self.score = 0
         if len(self.enemy_list) > 0:
@@ -243,7 +243,7 @@ class Game(object):
         self.level_text = self.font.render("Level: 1", True, (255, 255, 255))
     
     def run_game(self):
-        if not self.terminate:
+        if self.terminate_count_down != 0:
             state = GameState(game=self, currentAgent=0)
             direction = self.agent.getAction(state)
             self.player.update(direction)
@@ -294,7 +294,6 @@ class Game(object):
         hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
-            self.score = -float('inf')
             self.explosion.add(self.player.rect.topleft)
             sounds["plane"].stop()
             for enemy in hit_list:
@@ -304,7 +303,6 @@ class Game(object):
         hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
-            self.score = -float('inf')
             self.explosion.add(self.player.rect.topleft)
             sounds["plane"].stop()
             for projectile in hit_list:
@@ -325,6 +323,7 @@ class Game(object):
             self.texture_increment += 1
         
         if self.terminate:
+            self.score = 0
             if self.terminate_count_down == 0:
                 self.running = False
             else:

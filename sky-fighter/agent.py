@@ -2,8 +2,30 @@ from game import Directions
 import random
 
 
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 640
+
 def scoreEvaluationFunction(currentGameState):
-    return currentGameState.getScore()
+    enemyPos = currentGameState.getEnemyPositions()
+    projPos = currentGameState.getProjPositions()
+    pos = currentGameState.getPlayerPosition()
+    enemyPosDiff = [abs(enemy[0] - pos[0]) + abs(enemy[1] - pos[1]) for enemy in enemyPos]
+    projPosDiff = [abs(proj[0] - pos[0]) + abs(proj[1] - pos[1]) for proj in projPos]
+    closestEnemy = min(enemyPosDiff) if len(enemyPos) != 0 else SCREEN_HEIGHT
+    if closestEnemy > SCREEN_HEIGHT / 4:
+        closestEnemy = SCREEN_HEIGHT / 4
+    closestProj = min(projPosDiff) if len(projPos) != 0 else SCREEN_HEIGHT
+    if closestProj > SCREEN_HEIGHT / 2:
+        closestProj = SCREEN_HEIGHT / 2
+    threatDistScore = closestEnemy + 20 * closestProj
+
+    # punish the score if flying too wide
+    distToCenter = abs(pos[0] - SCREEN_WIDTH / 2)
+    distToCenterScore = -2 * distToCenter
+
+    totalScore = (currentGameState.getScore(), threatDistScore, distToCenterScore)
+    print totalScore
+    return sum(totalScore)
 
 
 class Agent:
