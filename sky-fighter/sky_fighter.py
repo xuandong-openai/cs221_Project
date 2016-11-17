@@ -1,31 +1,14 @@
 #!/usr/bin/env python
-
-import pygame, random, agent
+from vars import *
+import random, agent
 from game import GameState
 from fileLoader import *
 from pygame.locals import *
 from agent import Directions
-from agent import MinimaxAgent
 
 images = None
 sounds = None
 state = None
-
-# define game constants
-GAME_FPS = 60
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 640
-
-MISSILE_SIZE = 40
-MISSILE_SPEED = 10
-
-PROJECTILE_SIZE = 20
-
-ENEMY_SIZE = 80
-ENEMY_HIT_SCORE = 10
-
-PLAYER_SIZE = 64
-PLAYER_SPEED = 10
 
 
 class Explosion(object):
@@ -174,7 +157,7 @@ class Player(pygame.sprite.Sprite):
                 direction = Directions.LEFT
             elif key_pressed[K_RIGHT]:
                 direction = Directions.RIGHT
-                
+        
         if direction == Directions.UP:
             if self.rect.top <= 0:
                 self.rect.top = 0
@@ -382,7 +365,7 @@ class Game(object):
             pygame.draw.rect(screen, (0, 0, 255), [125, 90 + self.menu_choice * 50, 160, 45], 3)
     
     def shoot(self):
-        missile = Missile(self.player.rect.center, images["missile"], speed_y = -MISSILE_SPEED)
+        missile = Missile(self.player.rect.center, images["missile"], speed_y=-MISSILE_SPEED)
         self.missile_list.add(missile)
 
 
@@ -420,11 +403,11 @@ def main():
             
             # if event.type == pygame.MOUSEBUTTONDOWN:
             #     game.shoot()                
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:  # using spacebar to shoot
                     game.shoot()
                 
-                if event.key == pygame.K_RETURN:
+                elif event.key == pygame.K_RETURN:
                     if not game.running:
                         # ------The user's menu selection----------------
                         if game.menu_choice == 0:
