@@ -43,7 +43,7 @@ class Enemy(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
-        self.mask = pygame.mask.from_surface(self.image)
+        # self.mask = pygame.mask.from_surface(self.image)
         self.rect.topleft = (random.randint(0, 640), -50)
         if self.rect.x < 105:
             self.speed_x = random.randint(0, 5)
@@ -111,7 +111,9 @@ class Enemy(pygame.sprite.Sprite):
 class Missile(pygame.sprite.Sprite):
     def __init__(self, pos, img, speed_x=0, speed_y=0):
         pygame.sprite.Sprite.__init__(self)
-        self.image = img
+        self.image = pygame.image.load("files/missile.png").convert_alpha()
+        images["missile"] = pygame.transform.scale(self.image, (MISSILE_SIZE_W, MISSILE_SIZE_H))
+        # self.image = img
         self.rect = self.image.get_rect()
         self.rect.center = pos
         self.speed_x = speed_x
@@ -125,7 +127,10 @@ class Missile(pygame.sprite.Sprite):
 class Projectile(Missile):
     def __init__(self, pos, img):
         Missile.__init__(self, pos, img)
-        self.mask = pygame.mask.from_surface(self.image)
+        self.image = pygame.image.load("files/projectile.png").convert()
+        self.image.set_colorkey((0, 0, 0))
+        self.image = pygame.transform.scale(self.image, (PROJECTILE_SIZE, PROJECTILE_SIZE))
+        # self.mask = pygame.mask.from_surface(self.image)
         self.speed_y = 8
 
 
@@ -137,7 +142,7 @@ class Player(pygame.sprite.Sprite):
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.bottomright = [SCREEN_WIDTH / 2 - PLAYER_SIZE / 2, SCREEN_HEIGHT]  # born at the bottom of screen
-        self.mask = pygame.mask.from_surface(self.image)
+        # self.mask = pygame.mask.from_surface(self.image)
         self.speed = PLAYER_SPEED
     
     def update(self, direction):
@@ -216,6 +221,7 @@ class Game(object):
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
         self.agent = agent.MinimaxAgent()
+        # self.agent = agent.AlphaBetaAgent()
     
     def scroll_menu_up(self):
         if self.menu_choice > 0:
@@ -250,7 +256,7 @@ class Game(object):
         self.enemy_list.update()
         self.missile_list.update()
         self.projectile_list.update()
-        self.score += 1
+        self.score += SCORE_STAY_ONE_FRAME
         
         # clear out of bound missiles
         for missile in self.missile_list:
@@ -279,7 +285,7 @@ class Game(object):
             if len(hit_list) > 0:
                 self.explosion.add((enemy.rect.x + 20, enemy.rect.y + 20))
                 self.enemy_list.remove(enemy)
-                self.score += ENEMY_HIT_SCORE
+                self.score += SCORE_HIT_ENEMY
                 if self.level == 1:
                     if self.score == self.level1Score:
                         self.level += 1
@@ -291,8 +297,8 @@ class Game(object):
                         self.tick_delay = self.level2EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
         
-        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
-        # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
+        # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
+        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
@@ -301,8 +307,8 @@ class Game(object):
                 self.explosion.add(enemy.rect.topleft)
                 self.enemy_list.remove(enemy)
         
-        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
-        # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
+        # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
+        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
