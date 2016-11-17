@@ -7,8 +7,7 @@ from pygame.locals import *
 from agent import Directions
 from agent import MinimaxAgent
 import sys
-
-#sys.setrecursionlimit(10000)
+import copy
 
 images = None
 sounds = None
@@ -74,7 +73,7 @@ class Enemy(pygame.sprite.Sprite):
         self.sprayNum = 3 # number of spray projectiles
         self.sprayDiff = 4
 
-    def update(self, direction):
+    def updateWithAction(self, direction):
         # self.rect.center = pygame.mouse.get_pos()
 
         # using keyboard to move
@@ -83,22 +82,22 @@ class Enemy(pygame.sprite.Sprite):
             if self.rect.top <= 0:
                 self.rect.top = 0
             else:
-                self.rect.top -= self.speed
+                self.rect.top -= self.speed_y
         if direction == Directions.DOWN:
             if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
                 self.rect.top = SCREEN_HEIGHT - self.rect.height
             else:
-                self.rect.top += self.speed
+                self.rect.top += self.speed_y
         if direction == Directions.LEFT:
             if self.rect.left <= 0:
                 self.rect.left = 0
             else:
-                self.rect.left -= self.speed
+                self.rect.left -= self.speed_x
         if direction == Directions.RIGHT:
             if self.rect.left >= SCREEN_WIDTH - self.rect.width:
                 self.rect.left = SCREEN_WIDTH - self.rect.width
             else:
-                self.rect.left += self.speed
+                self.rect.left += self.speed_x
         self.updateProjectiles()
 
     def update(self):
@@ -158,13 +157,11 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottomright = [SCREEN_WIDTH / 2, SCREEN_HEIGHT] # born at the bottom of screen
         self.mask = pygame.mask.from_surface(self.image)
         self.speed = 10
-        self.agent = agent.MinimaxAgent()
     
-    def update(self, state):
+    def update(self, direction):
         # self.rect.center = pygame.mouse.get_pos()
         
         # using keyboard to move
-        direction = self.agent.getAction(state)
         key_pressed = pygame.key.get_pressed()
         if key_pressed is not None:
             if key_pressed[K_UP]:
@@ -235,7 +232,8 @@ class Game(object):
         self.level2Score = 1000
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
-        
+        self.agent = agent.MinimaxAgent()
+
     def scroll_menu_up(self):
         if self.menu_choice > 0:
             self.menu_choice -= 1
@@ -264,7 +262,8 @@ class Game(object):
     def run_game(self):
         if not self.terminate:
             state = GameState(self)
-            self.player.update(state)
+            direction = self.agent.getAction(state)
+            self.player.update(direction)
         self.enemy_list.update()
         self.missile_list.update()
         self.projectile_list.update()
@@ -402,7 +401,6 @@ def main():
         sounds = loadSounds()
         # -----------------------------------------------
         game = Game()  # Create the game object
-        state = GameState(game)
     except pygame.error:
         done = True
     # Used to manage how fast the screen updates
@@ -459,7 +457,7 @@ def main():
         
         # --- Limit to 30 frames per second
         clock.tick(GAME_FPS)
-    
+
     # Close the window and quit.
     # If you forget this line, the program will 'hang'
     # on exit if running from IDLE.

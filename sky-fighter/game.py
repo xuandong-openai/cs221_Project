@@ -1,4 +1,5 @@
 import pygame
+import copy
 
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 640
@@ -117,13 +118,17 @@ class GameState(object):
 		nextState = GameState(self.data)
 		game = nextState.data
 
-		for projectile in game.projectile_list:
-			projectile.update()
-
 		if index == 0:
-			game.player.update(nextState)
+			# for projectile in game.projectile_list:
+			# 	projectile.update()
+
+			game.player.update(action)
 		else:
-			movedEnemy = game.enemy_list[index]
-			movedEnemy.update(action)
+			print index
+			for enemy in game.enemy_list:
+				index -= 1
+				if index == 0:
+					enemy.updateWithAction(action)
+					break
 
 		return GameState(game)
