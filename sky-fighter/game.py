@@ -52,11 +52,11 @@ class GameState(object):
             self.score = previousState.score
             
         self.currentAgent = currentAgent
-        # if self.currentAgent == 0:
-        #     for missile in self.missile_list:
-        #         missile.update()
-        #     for projectile in self.projectile_list:
-        #         projectile.update()
+        if self.currentAgent == 0:
+            for missile in self.missile_list:
+                missile.update()
+            for projectile in self.projectile_list:
+                projectile.update()
         
     def deepCopy(self, target, list):
         # target = pygame.sprite.Group()
@@ -175,11 +175,11 @@ class GameState(object):
             nextState.getPlayer().update(action)
             if nextState.isLose():
                 nextState.score = 0
-        else:
-            nextState.getFlight(agentIndex).update(action)
-            isDead = nextState.checkEnemyDeath(agentIndex)
-            nextState.score += ENEMY_HIT_SCORE
-            if isDead:
-                nextState.removeEnemy(agentIndex)
-                nextState.currentAgent -= 1
+        # else:
+        #     nextState.getFlight(agentIndex).update(action)
+        #     isDead = nextState.checkEnemyDeath(agentIndex)
+        #     nextState.score += ENEMY_HIT_SCORE
+        #     if isDead:
+        #         nextState.removeEnemy(agentIndex)
+        #         nextState.currentAgent -= 1
         return nextState
