@@ -8,7 +8,7 @@ from agent import Directions
 from agent import MinimaxAgent
 import sys
 
-sys.setrecursionlimit(10000)
+#sys.setrecursionlimit(10000)
 
 images = None
 sounds = None
@@ -20,15 +20,8 @@ SCREEN_HEIGHT = 640
 MISSILE_SIZE = 40
 PROJECTILE_SIZE = 20
 ENEMY_SIZE = 80
-ENEMY_SHOOT_FREEZETIME = 30
-ENEMY_SPRAY_NUM = 3 # number of spray projectiles
 PLAYER_SIZE = 64
-PLAYER_SPEED = 10 # moving speed
 GAME_FPS = 60
-LEVEL1_SCORE = 500
-LEVEL2_SCORE = 1000
-LEVEL1_ENEMY_FREQ = 25
-LEVEL2_ENEMY_FREQ = 15
 
 
 class Explosion(object):
@@ -55,7 +48,8 @@ class Explosion(object):
 
 
 class Enemy(pygame.sprite.Sprite):
-    tick = ENEMY_SHOOT_FREEZETIME  # time before enemy shoots missiles
+    shootFreezetime = 30
+    tick = shootFreezetime  # time before enemy shoots missiles
     projectile_image = None
     
     def __init__(self, img, projectile_list, tick_delay):
@@ -77,6 +71,8 @@ class Enemy(pygame.sprite.Sprite):
         self.projectile_list = projectile_list
         self.speed_y = random.randint(3, 7)
         self.tick_delay = tick_delay
+        self.sprayNum = 3 # number of spray projectiles
+        self.sprayDiff = 4
 
     def update(self, direction):
         # self.rect.center = pygame.mouse.get_pos()
@@ -114,19 +110,18 @@ class Enemy(pygame.sprite.Sprite):
 
     def updateProjectiles(self):
         if self.tick == 0:
-            projectiles = [None] * ENEMY_SPRAY_NUM
-            for i in range(ENEMY_SPRAY_NUM):
+            projectiles = [None] * self.sprayNum
+            for i in range(self.sprayNum):
                 projectiles[i] = Projectile(self.rect.center, self.projectile_image)
             myx = self.speed_x
             diff = 0
-            for i in range(ENEMY_SPRAY_NUM):
+            for i in range(self.sprayNum):
                 if i % 2 == 0:
                     projectiles[i].speed_x = myx - diff
                 else:
                     projectiles[i].speed_x = myx + diff
-                projectiles[i].speed_y = 8
                 self.projectile_list.add(projectiles[i])
-                diff -= 4
+                diff -= self.sprayDiff
             self.tick = self.tick_delay
         else:
             self.tick -= 1
@@ -150,6 +145,7 @@ class Projectile(Missile):
     def __init__(self, pos, img):
         Missile.__init__(self, pos, img)
         self.mask = pygame.mask.from_surface(self.image)
+        self.speed_y = 8
 
 
 class Player(pygame.sprite.Sprite):
@@ -161,7 +157,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.bottomright = [SCREEN_WIDTH / 2, SCREEN_HEIGHT] # born at the bottom of screen
         self.mask = pygame.mask.from_surface(self.image)
-        self.speed = PLAYER_SPEED
+        self.speed = 10
         self.agent = agent.MinimaxAgent()
     
     def update(self, state):
@@ -205,7 +201,7 @@ class Game(object):
     display_help_screen = False
     display_credits_screen = False
     texture_increment = -SCREEN_HEIGHT
-    tick = GAME_FPS  # 30 fps = 1 second
+    tick = GAME_FPS  # 60 fps = 1 second
     tick_delay = 35
     level = 1
     running = False
@@ -235,6 +231,10 @@ class Game(object):
         self.menu_text.append(txt)
         # ---------------------------------------------------------------
         self.explosion = Explosion()
+        self.level1Score = 500
+        self.level2Score = 1000
+        self.level1EnemyFreq = 25
+        self.level2EnemyFreq = 15
         
     def scroll_menu_up(self):
         if self.menu_choice > 0:
@@ -295,14 +295,14 @@ class Game(object):
                 self.enemy_list.remove(enemy)
                 self.score += 10
                 if self.level == 1:
-                    if self.score == LEVEL1_SCORE:
+                    if self.score == self.level1Score:
                         self.level += 1
-                        self.tick_delay = LEVEL1_ENEMY_FREQ
+                        self.tick_delay = self.level1EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
                 elif self.level == 2:
-                    if self.score == LEVEL2_SCORE:
+                    if self.score == self.level2Score:
                         self.level += 1
-                        self.tick_delay = LEVEL2_ENEMY_FREQ
+                        self.tick_delay = self.level2EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
         
         hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
