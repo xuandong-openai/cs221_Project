@@ -17,10 +17,12 @@ SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 640
 
 MISSILE_SIZE = 40
+MISSILE_SPEED = 10
 
 PROJECTILE_SIZE = 20
 
 ENEMY_SIZE = 80
+ENEMY_HIT_SCORE = 10
 
 PLAYER_SIZE = 64
 PLAYER_SPEED = 10
@@ -127,14 +129,13 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class Missile(pygame.sprite.Sprite):
-    speed_x = 0
-    speed_y = 0
-    
-    def __init__(self, pos, img):
+    def __init__(self, pos, img, speed_x=0, speed_y=0):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
         self.rect.center = pos
+        self.speed_x = speed_x
+        self.speed_y = speed_y
     
     def update(self):
         self.rect.x += self.speed_x
@@ -271,30 +272,34 @@ class Game(object):
         self.projectile_list.update()
         self.score += 1
         
+        # clear out of bound missiles
         for missile in self.missile_list:
             if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
                 self.missile_list.remove(missile)
             elif missile.rect.y < - MISSILE_SIZE or missile.rect.y > SCREEN_HEIGHT:
                 self.missile_list.remove(missile)
         
+        # clear out of bound projectiles
         for projectile in self.projectile_list:
             if projectile.rect.x < 0 or projectile.rect.x > SCREEN_WIDTH:
                 self.projectile_list.remove(projectile)
             elif projectile.rect.y < - PROJECTILE_SIZE or projectile.rect.y > SCREEN_HEIGHT:
                 self.projectile_list.remove(projectile)
         
+        # clear out of bound enemies
         for enemy in self.enemy_list:
             if enemy.rect.x < -ENEMY_SIZE or enemy.rect.x > SCREEN_WIDTH:
                 self.enemy_list.remove(enemy)
             elif enemy.rect.y < -ENEMY_SIZE or enemy.rect.y > SCREEN_HEIGHT:
                 self.enemy_list.remove(enemy)
         
+        # clear hit enemies
         for enemy in self.enemy_list:
             hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True)
             if len(hit_list) > 0:
                 self.explosion.add((enemy.rect.x + 20, enemy.rect.y + 20))
                 self.enemy_list.remove(enemy)
-                self.score += 10
+                self.score += ENEMY_HIT_SCORE
                 if self.level == 1:
                     if self.score == self.level1Score:
                         self.level += 1
@@ -377,8 +382,7 @@ class Game(object):
             pygame.draw.rect(screen, (0, 0, 255), [125, 90 + self.menu_choice * 50, 160, 45], 3)
     
     def shoot(self):
-        missile = Missile(self.player.rect.center, images["missile"])
-        missile.speed_y = -10
+        missile = Missile(self.player.rect.center, images["missile"], speed_y = -MISSILE_SPEED)
         self.missile_list.add(missile)
 
 
@@ -386,13 +390,12 @@ def main():
     pygame.init()
     
     # Set the width and height of the screen [width, height]
-    
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    
     pygame.display.set_caption("Sky Fighter")
     
     # -------------make the mouse cursor invisible-------------------
     pygame.mouse.set_visible(False)
+    
     # -----------------------------------------
     done = False
     # Loop until the user clicks the close button.
@@ -404,6 +407,7 @@ def main():
         # -----------------------------------------------
         game = Game()  # Create the game object
     except pygame.error:
+        print pygame.get_error()
         done = True
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()

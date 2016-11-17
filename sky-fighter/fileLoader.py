@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import pygame
+from collections import Counter
 
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 640
@@ -9,8 +10,9 @@ MISSILE_SIZE_H = 40
 MISSILE_SIZE_W = 20
 PROJECTILE_SIZE = 20
 
+
 def loadImages():
-    images = {}
+    images = Counter()
     
     images["explosion01"] = pygame.image.load("files/explosion01.png").convert_alpha()
     images["explosion02"] = pygame.image.load("files/explosion02.png").convert_alpha()
@@ -54,10 +56,9 @@ def loadImages():
     
     return images
 
+
 def loadSounds():
-    sounds = {}
-    
+    sounds = Counter()
     sounds["explosion"] = pygame.mixer.Sound("files/explosion.ogg")
     sounds["plane"] = pygame.mixer.Sound("files/plane.ogg")
-    
     return sounds
