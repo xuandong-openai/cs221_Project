@@ -61,34 +61,31 @@ class Enemy(pygame.sprite.Sprite):
         self.sprayNum = 3  # number of spray projectiles
         self.sprayDiff = 4
     
-    def updateWithAction(self, direction):
-        # self.rect.center = pygame.mouse.get_pos()
-        # using keyboard to move
-        if direction == Directions.UP:
-            if self.rect.top <= 0:
-                self.rect.top = 0
-            else:
-                self.rect.top -= self.speed_y
-        elif direction == Directions.DOWN:
-            if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
-                self.rect.top = SCREEN_HEIGHT - self.rect.height
-            else:
-                self.rect.top += self.speed_y
-        elif direction == Directions.LEFT:
-            if self.rect.left <= 0:
-                self.rect.left = 0
-            else:
-                self.rect.left -= self.speed_x
-        elif direction == Directions.RIGHT:
-            if self.rect.left >= SCREEN_WIDTH - self.rect.width:
-                self.rect.left = SCREEN_WIDTH - self.rect.width
-            else:
-                self.rect.left += self.speed_x
-        self.updateProjectiles()
-    
-    def update(self):
-        self.rect.x += self.speed_x
-        self.rect.y += self.speed_y
+    def update(self, action=None):
+        if action is None:
+            self.rect.x += self.speed_x
+            self.rect.y += self.speed_y
+        else:
+            if action == Directions.UP:
+                if self.rect.top <= 0:
+                    self.rect.top = 0
+                else:
+                    self.rect.top -= self.speed_y
+            elif action == Directions.DOWN:
+                if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
+                    self.rect.top = SCREEN_HEIGHT - self.rect.height
+                else:
+                    self.rect.top += self.speed_y
+            elif action == Directions.LEFT:
+                if self.rect.left <= 0:
+                    self.rect.left = 0
+                else:
+                    self.rect.left -= self.speed_x
+            elif action == Directions.RIGHT:
+                if self.rect.left >= SCREEN_WIDTH - self.rect.width:
+                    self.rect.left = SCREEN_WIDTH - self.rect.width
+                else:
+                    self.rect.left += self.speed_x
         self.updateProjectiles()
     
     # enemy can shoot multiple missiles
@@ -247,7 +244,7 @@ class Game(object):
     
     def run_game(self):
         if not self.terminate:
-            state = GameState(self)
+            state = GameState(game=self, currentAgent=0)
             direction = self.agent.getAction(state)
             self.player.update(direction)
         self.enemy_list.update()
