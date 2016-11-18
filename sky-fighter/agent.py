@@ -62,7 +62,6 @@ class Agent:
 class MinimaxAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth):
-            print "depth %d, index %d" % (depth, index)
             # check if it's the terminal state
             if state.isWin() or state.isLose() or len(state.getLegalActions(index)) == 0 or depth == 0:
                 return self.evaluationFunction(state), Directions.STOP
@@ -82,8 +81,8 @@ class MinimaxAgent(Agent):
             indices = [i for i in range(len(choices)) if choices[i][0] == chosenValue[0]]
             chosenIndex = random.choice(indices)  # Pick randomly among max
             action = legalActions[chosenIndex]
-            if len(indices) > 1:
-                action = Directions.STOP
+            # if len(indices) > 1:
+            #     action = Directions.STOP
             return chosenValue, action
             
             # return max(choices) if index == 0 else min(choices)
@@ -95,7 +94,6 @@ class MinimaxAgent(Agent):
 class AlphaBetaAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth, lowerBound, upperBound):
-            print "depth %d, index %d" % (depth, index)
             # check if it's the terminal state
             if state.isWin() or state.isLose() or len(state.getLegalActions(index)) == 0 or depth == 0:
                 return self.evaluationFunction(state), Directions.STOP
@@ -104,19 +102,14 @@ class AlphaBetaAgent(Agent):
             nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
             
             legalActions = state.getLegalActions(index)
-            # if Directions.STOP in legalActions and len(legalActions) > 1:
-            #     legalActions.remove(Directions.STOP)
             choices = []
             for legalAction in legalActions:
-                # compute the recursion
-                value, action = recurse(state.generateSuccessor(index, legalAction), nextIndex, nextDepth, lowerBound, upperBound)
+                value, _ = recurse(state.generateSuccessor(index, legalAction), nextIndex, nextDepth, lowerBound, upperBound)
                 choices.append((value, legalAction))
-                # update the local lower and upper bound
                 if index == 0:
                     lowerBound = max(value, lowerBound)
                 else:
                     upperBound = min(value, upperBound)
-                # prune a node if its interval doesn't have non-trivial overlap with every ancestor
                 if lowerBound > upperBound:
                     break
             # return max value if it's agent otherwise min if it's opponent
@@ -124,10 +117,9 @@ class AlphaBetaAgent(Agent):
             indices = [i for i in range(len(choices)) if choices[i][0] == chosenValue[0]]
             chosenIndex = random.choice(indices)  # Pick randomly among max
             action = legalActions[chosenIndex]
-            if len(indices) > 1:
-                action = Directions.STOP
+            # if len(indices) > 1:
+            #     action = Directions.STOP
             return chosenValue, action
-            # return max(choices) if index == 0 else min(choices)
         
         value, action = recurse(gameState, self.index, self.depth, -INF, INF)
         return action

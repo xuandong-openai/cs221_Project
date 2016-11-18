@@ -43,7 +43,7 @@ class Enemy(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
-        # self.mask = pygame.mask.from_surface(self.image)
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect.topleft = (random.randint(0, 640), -50)
         if self.rect.x < 105:
             self.speed_x = random.randint(0, 5)
@@ -130,7 +130,7 @@ class Projectile(Missile):
         self.image = pygame.image.load("files/projectile.png").convert()
         self.image.set_colorkey((0, 0, 0))
         self.image = pygame.transform.scale(self.image, (PROJECTILE_SIZE, PROJECTILE_SIZE))
-        # self.mask = pygame.mask.from_surface(self.image)
+        self.mask = pygame.mask.from_surface(self.image)
         self.speed_y = 8
 
 
@@ -142,7 +142,7 @@ class Player(pygame.sprite.Sprite):
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.bottomright = [SCREEN_WIDTH / 2 - PLAYER_SIZE / 2, SCREEN_HEIGHT]  # born at the bottom of screen
-        # self.mask = pygame.mask.from_surface(self.image)
+        self.mask = pygame.mask.from_surface(self.image)
         self.speed = PLAYER_SPEED
     
     def update(self, direction):
@@ -297,8 +297,8 @@ class Game(object):
                         self.tick_delay = self.level2EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
         
-        # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
-        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
+        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
+        # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
@@ -307,8 +307,8 @@ class Game(object):
                 self.explosion.add(enemy.rect.topleft)
                 self.enemy_list.remove(enemy)
         
-        # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
-        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
+        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
+        # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)

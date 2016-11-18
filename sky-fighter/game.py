@@ -126,13 +126,13 @@ class GameState(object):
         flightHeight = flight.height
         flightWidth = flight.width
         if currentPosition[0] > 0:
-            res.append(Directions.UP)
-        if currentPosition[0] < SCREEN_HEIGHT - flightHeight:
-            res.append(Directions.DOWN)
-        if currentPosition[1] > 0:
             res.append(Directions.LEFT)
-        if currentPosition[1] < SCREEN_WIDTH - flightWidth:
+        if currentPosition[0] < SCREEN_WIDTH - flightWidth:
             res.append(Directions.RIGHT)
+        if currentPosition[1] > 0:
+            res.append(Directions.UP)
+        if currentPosition[1] < SCREEN_HEIGHT - flightHeight:
+            res.append(Directions.DOWN)
         return res
     
     def getScore(self):
