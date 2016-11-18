@@ -31,9 +31,20 @@ class Item(object):
         dis = sqrt((self.x - item2.x) ** 2 + (self.y - item2.y) ** 2)
         return dis
     
+    def checkXCollide(self, item2):
+        if self.x < item2.x:
+            return item2.x - self.x < self.width
+        else:
+            return self.x - item2.x < item2.width
+        
+    def checkYCollide(self, item2):
+        if self.y < item2.y:
+            return item2.y - self.y < self.height
+        else:
+            return self.y - item2.y < item2.height
+    
     def checkCollide(self, item2):
-        dist = self.getDistance(item2)
-        return self.getDistance(item2) < 20
+        return self.checkXCollide(item2) and self.checkYCollide(item2)
     
     def updateProjectile(self):
         self.x += self.speed_x

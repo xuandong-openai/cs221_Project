@@ -49,7 +49,7 @@ def scoreEvaluationFunction(currentGameState):
 
 
 class Agent:
-    def __init__(self, depth='2'):
+    def __init__(self, depth='1'):
         self.index = 0
         self.evaluationFunction = scoreEvaluationFunction
         self.depth = int(depth)
