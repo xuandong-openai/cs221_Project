@@ -14,5 +14,3 @@ ENEMY_SIZE = 80
 
 PLAYER_SIZE = 64
 PLAYER_SPEED = 10
-
-INF = float('inf')

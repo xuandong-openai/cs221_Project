@@ -220,8 +220,8 @@ class Game(object):
         self.level2Score = 1000
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
-        self.agent = agent.MinimaxAgent()
-        # self.agent = agent.AlphaBetaAgent()
+        # self.agent = agent.MinimaxAgent()
+        self.agent = agent.AlphaBetaAgent()
     
     def scroll_menu_up(self):
         if self.menu_choice > 0:
