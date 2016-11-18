@@ -3,6 +3,7 @@ from vars import *
 import random
 from math import sqrt
 
+
 class Directions:
     UP = 'Up'
     DOWN = 'Down'
@@ -12,32 +13,19 @@ class Directions:
 
 
 class Item(object):
-    def __init__(self, rect, isPlayer=False):
+    def __init__(self, rect, speed_x=0, speed_y=0, isPlayer=False):
         self.x = rect.x
         self.y = rect.y
         self.width = rect.width
         self.height = rect.height
         self.rect = rect
-        self.speed_x = 0
-        self.speed_y = 0
         self.isPlayer = isPlayer
-        self.getSpeed()
-        
-    def getSpeed(self):
-        if self.x < 105:
-            self.speed_x = random.randint(0, 5)
-        elif self.x < 210:
-            self.speed_x = random.randint(-1, 5)
-        elif self.x < 315:
-            self.speed_x = random.randint(-3, 3)
-        elif self.x < 420:
-            self.speed_x = random.randint(-5, -1)
-        else:
-            self.speed_x = random.randint(-5, 0)
-        
         if self.isPlayer:
             self.speed_x = PLAYER_SPEED
             self.speed_y = PLAYER_SPEED
+        else:
+            self.speed_x = speed_x
+            self.speed_y = speed_y
     
     def getDistance(self, item2):
         dis = sqrt((self.x - item2.x) ** 2 + (self.y - item2.y) ** 2)
@@ -50,32 +38,33 @@ class Item(object):
     def updateProjectile(self):
         self.x += self.speed_x
         self.y += self.speed_y
-        
+    
     def updateFlight(self, action):
         if action is None:
             self.x += self.speed_x
             self.y += self.speed_y
         else:
             if action == Directions.UP:
-                if self.y <= 0:
+                if self.y <= self.speed_y:
                     self.y = 0
                 else:
                     self.y -= self.speed_y
             elif action == Directions.DOWN:
-                if self.y >= SCREEN_HEIGHT - self.height:
+                if self.y >= SCREEN_HEIGHT - self.height - self.speed_y:
                     self.y = SCREEN_HEIGHT - self.height
                 else:
                     self.y += self.speed_y
             elif action == Directions.LEFT:
-                if self.x <= 0:
+                if self.x <= self.speed_x:
                     self.x = 0
                 else:
                     self.x -= self.speed_x
             elif action == Directions.RIGHT:
-                if self.x >= SCREEN_WIDTH - self.width:
+                if self.x >= SCREEN_WIDTH - self.width - self.speed_x:
                     self.x = SCREEN_WIDTH - self.width
                 else:
                     self.x += self.speed_x
+
 
 class GameState(object):
     def __init__(self, game=None, previousState=None, currentAgent=0):
@@ -87,24 +76,23 @@ class GameState(object):
             state = game
         elif previousState is not None:
             state = previousState
-            
+        
         self.player = Item(state.player.rect, isPlayer=True)
         for enemy in state.enemy_list:
-            self.enemy_list.append(Item(enemy.rect))
-        for proj in state.projectile_list:
-            self.projectile_list.append(Item(proj.rect))
+            self.enemy_list.append(Item(enemy.rect, speed_x=enemy.speed_x, speed_y=enemy.speed_y))
+        for projectile in state.projectile_list:
+            self.projectile_list.append(Item(projectile.rect, speed_x=projectile.speed_x, speed_y=projectile.speed_y))
         for missile in state.missile_list:
-            self.missile_list.append(Item(missile.rect))
+            self.missile_list.append(Item(missile.rect, speed_x=missile.speed_x, speed_y=missile.speed_y))
         self.score = state.score
-            
         self.currentAgent = currentAgent
-                
+    
     def getProjPositions(self):
         res = []
         for projectile in self.projectile_list:
             res.append((projectile.x, projectile.y))
         return res
-            
+    
     def getPlayerPosition(self):
         return self.player.x, self.player.y
     
@@ -117,7 +105,7 @@ class GameState(object):
     def getFlight(self, agentIndex):
         if agentIndex == 0:
             return self.player
-        return self.enemy_list[agentIndex-1]
+        return self.enemy_list[agentIndex - 1]
     
     def getLegalActions(self, agentIndex):
         res = [Directions.STOP]
@@ -154,21 +142,20 @@ class GameState(object):
         for enemy in self.enemy_list:
             if enemy.checkCollide(self.player):
                 return True
-            
         for projectile in self.projectile_list:
             if projectile.checkCollide(self.player):
                 return True
-        
         return False
     
     def checkEnemyDeath(self, agentIndex):
         enemy = self.getFlight(agentIndex)
         for missile in self.missile_list:
-            return enemy.checkCollide(missile)
-
+            if enemy.checkCollide(missile):
+                return True
+        return False
     
     def removeEnemy(self, agentIndex):
-        self.enemy_list.pop(agentIndex-1)
+        self.enemy_list.pop(agentIndex - 1)
     
     def removeMissile(self, missileIndex):
         self.missile_list.pop(missileIndex)
@@ -177,9 +164,9 @@ class GameState(object):
         return (self.currentAgent + 1) % self.getNumAgents()
     
     def getLevel(self):
-        if self.getScore() >= 100:
+        if self.getScore() >= SCORE_LEVEL_THREE:
             return 3
-        elif self.getScore() >= 50:
+        elif self.getScore() >= SCORE_LEVEL_TWO:
             return 2
         else:
             return 1
@@ -197,18 +184,16 @@ class GameState(object):
         nextState = GameState(previousState=self, currentAgent=self.getNextAgentIndex())
         if agentIndex == 0:
             player = nextState.getPlayer()
-            
             for projectile in self.projectile_list:
                 projectile.updateProjectile()
-            
             player.updateFlight(action)
             if nextState.isLose():
-                nextState.score = -10000
+                nextState.score = -INF
         else:
             enemy = nextState.getFlight(agentIndex)
             enemy.updateFlight(action)
             # isDead = nextState.checkEnemyDeath(agentIndex)
-            nextState.score += SCORE_HIT_ENEMY
+            # nextState.score += SCORE_HIT_ENEMY
             # if isDead:
             #     nextState.removeEnemy(agentIndex)
             #     nextState.currentAgent -= 1
