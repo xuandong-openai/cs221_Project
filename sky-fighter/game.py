@@ -147,12 +147,13 @@ class GameState(object):
                 return True
         return False
     
-    def checkEnemyDeath(self, agentIndex):
+    def getMissileHitList(self, agentIndex):
         enemy = self.getFlight(agentIndex)
-        for missile in self.missile_list:
+        hitList = []
+        for missile, index in self.missile_list:
             if enemy.checkCollide(missile):
-                return True
-        return False
+                hitList.append(index)
+        return hitList
     
     def removeEnemy(self, agentIndex):
         self.enemy_list.pop(agentIndex - 1)
@@ -181,20 +182,21 @@ class GameState(object):
         return len(self.projectile_list)
     
     def generateSuccessor(self, agentIndex, action):
-        nextState = GameState(previousState=self, currentAgent=self.getNextAgentIndex())
+        nextAgentIndex = self.getNextAgentIndex()
+        nextState = GameState(previousState=self, currentAgent=nextAgentIndex)
         if agentIndex == 0:
             player = nextState.getPlayer()
             for projectile in self.projectile_list:
                 projectile.updateProjectile()
             player.updateFlight(action)
             if nextState.isLose():
-                nextState.score = -INF
+                nextState.score = SCORE_LOSE
         else:
             enemy = nextState.getFlight(agentIndex)
             enemy.updateFlight(action)
-            # isDead = nextState.checkEnemyDeath(agentIndex)
-            # nextState.score += SCORE_HIT_ENEMY
-            # if isDead:
-            #     nextState.removeEnemy(agentIndex)
-            #     nextState.currentAgent -= 1
+            hitList = nextState.getMissileHitList(agentIndex)
+            if len(hitList) > 0:
+                nextState.score += SCORE_HIT_ENEMY
+                nextState.removeEnemy(nextAgentIndex)
+                nextState.currentAgent = nextAgentIndex % nextState.getNumAgents()
         return nextState

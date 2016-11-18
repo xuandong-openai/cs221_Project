@@ -220,8 +220,8 @@ class Game(object):
         self.level2Score = 1000
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
-        # self.agent = agent.MinimaxAgent()
-        self.agent = agent.AlphaBetaAgent()
+        self.agent = agent.MinimaxAgent()
+        # self.agent = agent.AlphaBetaAgent()
     
     def scroll_menu_up(self):
         if self.menu_choice > 0:
@@ -332,7 +332,7 @@ class Game(object):
             self.texture_increment += 1
         
         if self.terminate:
-            self.score = -10000
+            self.score = SCORE_LOSE
             if self.terminate_count_down == 0:
                 self.running = False
             else:
