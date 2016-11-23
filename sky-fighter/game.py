@@ -157,6 +157,7 @@ class GameState(object):
             if projectile.checkCollide(self.player):
                 return True
         return False
+        # return self.getScore() < 0
     
     def getMissileHitList(self, agentIndex):
         enemy = self.getFlight(agentIndex)
