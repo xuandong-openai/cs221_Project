@@ -220,8 +220,8 @@ class Game(object):
         self.level2Score = 1000
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
-        self.agent = agent.MinimaxAgent()
-        # self.agent = agent.AlphaBetaAgent()
+        # self.agent = agent.MinimaxAgent()
+        self.agent = agent.AlphaBetaAgent()
     
     def scroll_menu_up(self):
         if self.menu_choice > 0:
@@ -250,13 +250,13 @@ class Game(object):
     
     def run_game(self):
         if self.terminate_count_down != 0:
+            self.score += SCORE_STAY_ONE_FRAME
             state = GameState(game=self, currentAgent=0)
             direction = self.agent.getAction(state)
             self.player.update(direction)
         self.enemy_list.update()
         self.missile_list.update()
-        self.projectile_list.update()
-        self.score += SCORE_STAY_ONE_FRAME
+        self.projectile_list.update()        
         
         # clear out of bound missiles
         for missile in self.missile_list:
@@ -338,10 +338,10 @@ class Game(object):
             else:
                 self.terminate_count_down -= 1
         self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
+        print self.score
     
     def display_frame(self, screen):
         if self.running:
-            # screen.blit(images["ocean"],(0,self.texture_increment))
             screen.blit(images["background"], (0, 0))
             
             self.missile_list.draw(screen)
@@ -353,7 +353,6 @@ class Game(object):
             screen.blit(self.level_text, (285, 20))
             self.explosion.draw(screen)
             if self.terminate_count_down <= 90:
-                # screen.blit(images["gameOver"],(100,145))
                 screen.blit(images["gameover"], (0, 0))
         elif self.display_credits_screen:
             screen.blit(images["introImage"], (0, 0))
@@ -406,8 +405,6 @@ def main():
             if event.type == pygame.QUIT:  # If user clicked close
                 done = True  # Flag that we are done so we exit this loop
             
-            # if event.type == pygame.MOUSEBUTTONDOWN:
-            #     game.shoot()                
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:  # using spacebar to shoot
                     game.shoot()
