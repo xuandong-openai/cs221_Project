@@ -1,7 +1,6 @@
-import pygame
 from vars import *
-import random
 from math import sqrt
+from copy import deepcopy
 
 
 def checkCollide(item1, item2):
@@ -184,9 +183,9 @@ class GameState(object):
     def getMissileHitList(self, agentIndex):
         enemy = self.getFlight(agentIndex)
         hitList = []
-        for missile, index in self.missile_list:
+        for missile in self.missile_list:
             if enemy.checkCollide(missile):
-                hitList.append(index)
+                hitList.append(missile)
         return hitList
     
     def removeEnemy(self, agentIndex):
@@ -234,15 +233,21 @@ class GameState(object):
             for enemy in nextState.enemy_list:
                 enemy.updateFlight()
             player.updateFlight(action=action)
-            # if action == Directions.SHOOT:
-            #     playerRect = nextState.player.rect
-            #     missileRect= playerRect
-            #     missileRect.x = missileRect.x + playerRect.width / 2 - MISSILE_WIDTH / 2
-            #     missileRect.y = missileRect.y + playerRect.height / 2 - MISSILE_HEIGHT / 2
-            #     missileRect.width = MISSILE_WIDTH
-            #     missileRect.height = MISSILE_HEIGHT
-            #     missile = Item(missileRect, speed_y=-MISSILE_SPEED)
-            #     nextState.missile_list.append(missile)
+            if action == Directions.SHOOT:
+                nextState.score += SCORE_FIRE_MISSILE
+                missile = Item(self.player.rect, speed_y=-MISSILE_SPEED)
+                missile.x = missile.x + self.player.rect.width / 2 - MISSILE_WIDTH / 2
+                missile.y = missile.y + self.player.rect.height / 2 - MISSILE_HEIGHT / 2
+                missile.width = MISSILE_WIDTH
+                missile.height = MISSILE_HEIGHT
+                nextState.missile_list.append(missile)
+            for enemy in nextState.enemy_list:
+                missileHitList = nextState.getMissileHitList(nextState.enemy_list.index(enemy))
+                if len(missileHitList) > 0:
+                    nextState.score += SCORE_HIT_ENEMY
+                    nextState.enemy_list.remove(enemy)
+                    for missile in missileHitList:
+                        nextState.missile_list.remove(missile)
             if nextState.isLose():
                 nextState.score = SCORE_LOSE
             else:

@@ -173,17 +173,17 @@ class Player(pygame.sprite.Sprite):
                 self.rect.top = 0
             else:
                 self.rect.top -= self.speed
-        if direction == Directions.DOWN:
+        elif direction == Directions.DOWN:
             if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
                 self.rect.top = SCREEN_HEIGHT - self.rect.height
             else:
                 self.rect.top += self.speed
-        if direction == Directions.LEFT:
+        elif direction == Directions.LEFT:
             if self.rect.left <= 0:
                 self.rect.left = 0
             else:
                 self.rect.left -= self.speed
-        if direction == Directions.RIGHT:
+        elif direction == Directions.RIGHT:
             if self.rect.left >= SCREEN_WIDTH - self.rect.width:
                 self.rect.left = SCREEN_WIDTH - self.rect.width
             else:
@@ -269,6 +269,7 @@ class Game(object):
     def run_game(self):
         # if self.terminate_count_down != 0:
         state = GameState(game=self, currentAgent=0)
+        direction = None
         if self.aiPlayer_normalEnemy:
             direction = self.agent.getAction(state)
         elif self.aiPlayer_aiEnemy:
@@ -279,6 +280,8 @@ class Game(object):
             direction = Directions.STOP
         
         self.player.update(direction)
+        if direction == Directions.SHOOT:
+            self.shoot()
         self.enemy_list.update()
         self.missile_list.update()
         self.projectile_list.update()
@@ -306,7 +309,8 @@ class Game(object):
         
         # clear hit enemies
         for enemy in self.enemy_list:
-            hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True)
+            # hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True)
+            hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True, pygame.sprite.collide_mask)
             if len(hit_list) > 0:
                 self.explosion.add((enemy.rect.x + 20, enemy.rect.y + 20))
                 self.enemy_list.remove(enemy)
@@ -361,6 +365,7 @@ class Game(object):
         if not self.terminate:
             self.score += SCORE_STAY_ONE_FRAME
         else:
+            print "your score is: %d" % self.score
             self.score = SCORE_LOSE
             self.running = False
             # if self.terminate_count_down == 0:
