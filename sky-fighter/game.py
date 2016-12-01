@@ -215,6 +215,12 @@ class GameState(object):
     def getNumProjectile(self):
         return len(self.projectile_list)
 
+    def getMissilePositions(self):
+        res = []
+        for missile in self.missile_list:
+            res.append((missile.rect.x, missile.rect.y))
+        return res
+
     def getLastMissile(self):
         if len(self.missile_list) > 0:
             return self.missile_list[-1]

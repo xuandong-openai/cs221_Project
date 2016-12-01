@@ -4,12 +4,17 @@ from vars import *
 import math
 
 
-def scoreEvaluationFunction(currentGameState):
+def scoreEvaluationFunction(currentGameState, currentAction=None):
     enemyPos = currentGameState.getEnemyPositions()
     projPos = currentGameState.getProjPositions()
     pos = currentGameState.getPlayerPosition()
     missile = currentGameState.getLastMissile()
     enemies = currentGameState.getEnemies()
+    
+    # mislePos = currentGameState.getMissilePositions()
+    
+    def getManhattanDistance(pos1, pos2):
+        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
     def getSquaredDistance(pos1, pos2):
         return (pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2
@@ -31,19 +36,25 @@ def scoreEvaluationFunction(currentGameState):
 
     # penalty for firing missile
     missileScore = 0
-    if missile is not None:
-        missileScore -= 2000
+    offset = (24, 2)
+    if missile is not None and getManhattanDistance((missile.rect.x, missile.rect.y), pos) == sum(offset):
+        missileScore = -2000
         m_x, m_y = missile.rect.x, missile.rect.y
         mv_x, mv_y = 0, missile.speed_y
         for enemy in enemies:
             e_x, e_y = enemy.rect.x, enemy.rect.y
             ev_x, ev_y = enemy.speed_x, enemy.speed_y
+            print e_x, e_y, ev_x, ev_y
             for t in range(1, SCREEN_HEIGHT / mv_y):
                 newEnemyPos = (e_x + ev_x * t, e_y + ev_y * t)
-                newMislePos = (m_x, m_y + mv_y * t)
+                newMislePos = (m_x, m_y - mv_y * t)
                 if checkEMCollide(newEnemyPos, newMislePos):
                     missileScore = 5000
                     break
+    # if missile is not None and abs(missile.rect.y - pos[1]) == 2:
+    if missile is not None:
+    	m_x, m_y = missile.rect.x, missile.rect.y
+        print 'she la!!!', getManhattanDistance((m_x, m_y), pos)
 
     # calculate the number of threats in a range centered at player's position
     radius = 256
@@ -71,8 +82,9 @@ def scoreEvaluationFunction(currentGameState):
     else:
         horizontalScore = sum(horizontalDist) / 4
 
-    totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore, missileScore]
+    totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore]
     # totalScore = [gameScore]
+    # print totalScore
     return sum(totalScore)
 
 
