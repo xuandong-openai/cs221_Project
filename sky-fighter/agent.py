@@ -5,19 +5,19 @@ import math
 
 
 def scoreEvaluationFunction(currentGameState, currentAction=None):
+
+    pos = currentGameState.getPlayerPosition()
+    enemies = currentGameState.getEnemies()
     enemyPos = currentGameState.getEnemyPositions()
     projPos = currentGameState.getProjPositions()
-    pos = currentGameState.getPlayerPosition()
     missile = currentGameState.getLastMissile()
-    enemies = currentGameState.getEnemies()
-    
-    # mislePos = currentGameState.getMissilePositions()
-    
+    mislePos = currentGameState.getMissilePositions()
+
     def getManhattanDistance(pos1, pos2):
-        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+    	return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
     def getSquaredDistance(pos1, pos2):
-        return (pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2
+    	return (pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2
 
     def checkEMCollide(pos1, pos2):
         # pos1 is enemy, pos2 is missile
@@ -36,25 +36,26 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
 
     # penalty for firing missile
     missileScore = 0
-    offset = (24, 2)
-    if missile is not None and getManhattanDistance((missile.rect.x, missile.rect.y), pos) == sum(offset):
-        missileScore = -2000
-        m_x, m_y = missile.rect.x, missile.rect.y
-        mv_x, mv_y = 0, missile.speed_y
-        for enemy in enemies:
-            e_x, e_y = enemy.rect.x, enemy.rect.y
-            ev_x, ev_y = enemy.speed_x, enemy.speed_y
-            print e_x, e_y, ev_x, ev_y
-            for t in range(1, SCREEN_HEIGHT / mv_y):
-                newEnemyPos = (e_x + ev_x * t, e_y + ev_y * t)
-                newMislePos = (m_x, m_y - mv_y * t)
-                if checkEMCollide(newEnemyPos, newMislePos):
-                    missileScore = 5000
-                    break
-    # if missile is not None and abs(missile.rect.y - pos[1]) == 2:
-    if missile is not None:
-    	m_x, m_y = missile.rect.x, missile.rect.y
-        print 'she la!!!', getManhattanDistance((m_x, m_y), pos)
+    # offset = (24, 2)
+    offset = (PLAYER_SIZE - MISSILE_WIDTH) / 2, (PLAYER_SIZE - MISSILE_HEIGHT) / 2
+
+    if currentAction is not None:
+    	if len(mislePos) >= len(enemyPos) - 1:
+    		missileScore = -5000
+    	else:
+	    	missileScore = -200
+	    	m_x, m_y = pos[0] + offset[0], pos[1] + offset[1]
+	    	mv_y = MISSILE_SPEED
+	    	for enemy in enemies:
+	            e_x, e_y = enemy.rect.x, enemy.rect.y
+	            ev_x, ev_y = enemy.speed_x, enemy.speed_y
+	            # print e_x, e_y, ev_x, ev_y
+	            for t in range(1, SCREEN_HEIGHT / mv_y):
+	                newEnemyPos = (e_x + ev_x * t, e_y + ev_y * t)
+	                newMislePos = (m_x, m_y - mv_y * t)
+	                if checkEMCollide(newEnemyPos, newMislePos):
+	                    missileScore = 500
+	                    break
 
     # calculate the number of threats in a range centered at player's position
     radius = 256
@@ -82,14 +83,14 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
     else:
         horizontalScore = sum(horizontalDist) / 4
 
-    totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore]
+    totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore, missileScore]
     # totalScore = [gameScore]
     # print totalScore
     return sum(totalScore)
 
 
 class Agent:
-    def __init__(self, depth='1'):
+    def __init__(self, depth='0'):
         self.index = 0
         self.evaluationFunction = scoreEvaluationFunction
         self.depth = int(depth)
@@ -165,10 +166,14 @@ class ExpectimaxAgent(Agent):
             if state.isWin() or state.isLose():
                 return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
-                if index == 0:
-                    return self.evaluationFunction(state), Directions.STOP
+                # if index == 0:
+                	# print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
+                if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
+                	return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
                 else:
-                    return state.getScore(), Directions.STOP
+                	return self.evaluationFunction(state), Directions.STOP
+                # else:
+                #     return state.getScore(), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
             nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
@@ -183,7 +188,11 @@ class ExpectimaxAgent(Agent):
             maxValue = max(choices)[0]
             newChoices = [choice for choice in choices if choice[0] == maxValue]
             mean = sum(values) / len(values)
+            print choices
             return (mean, random.choice(legalActions)) if index != 0 else (maxValue, random.choice(newChoices)[1])
 
         value, action = recurse(gameState, self.index, self.depth)
+        print value, action
+        # if gameState.getLastMissile() is not None:
+        # 	print gameState.getPlayerPosition(), (gameState.getLastMissile().rect.x, gameState.getLastMissile().rect.y)
         return action

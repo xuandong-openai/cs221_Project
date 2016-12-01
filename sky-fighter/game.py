@@ -139,8 +139,8 @@ class GameState(object):
     
     def getLegalActions(self, agentIndex):
         res = [Directions.STOP]
-        # if agentIndex == 0:
-        #     res.append(Directions.SHOOT)
+        if agentIndex == 0:
+            res.append(Directions.SHOOT)
         flight = self.getFlight(agentIndex)
         currentPosition = (flight.x, flight.y)
         flightHeight = flight.height
