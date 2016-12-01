@@ -2,6 +2,7 @@
 from vars import *
 import random, agent
 from game import GameState
+from game import checkCollide
 from fileLoader import *
 from pygame.locals import *
 from agent import Directions
@@ -45,6 +46,8 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.topleft = (random.randint(0, 640), -50)
+        # print "my width: %d" % self.rect.width
+        # print "my height: %d" % self.rect.height
         if self.rect.x < 105:
             self.speed_x = random.randint(0, 5)
         elif self.rect.x < 210:
@@ -234,7 +237,7 @@ class Game(object):
     def start_game(self):
         self.running = True
         sounds["plane"].play(-1)  # Start the plane sound;
-        self.terminate_count_down = 100
+        # self.terminate_count_down = 60
         self.terminate = False
         self.score = 0
         if len(self.enemy_list) > 0:
@@ -249,14 +252,13 @@ class Game(object):
         self.level_text = self.font.render("Level: 1", True, (255, 255, 255))
     
     def run_game(self):
-        if self.terminate_count_down != 0:
-            self.score += SCORE_STAY_ONE_FRAME
-            state = GameState(game=self, currentAgent=0)
-            direction = self.agent.getAction(state)
-            self.player.update(direction)
-        self.enemy_list.update()
-        self.missile_list.update()
-        self.projectile_list.update()        
+        # if self.terminate_count_down != 0:
+        #     state = GameState(game=self, currentAgent=0)
+        #     direction = self.agent.getAction(state)
+        #     self.player.update(direction)
+        # self.enemy_list.update()
+        # self.missile_list.update()
+        # self.projectile_list.update()
         
         # clear out of bound missiles
         for missile in self.missile_list:
@@ -297,8 +299,9 @@ class Game(object):
                         self.tick_delay = self.level2EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
         
-        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
+        # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
         # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
+        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, checkCollide)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
@@ -307,8 +310,9 @@ class Game(object):
                 self.explosion.add(enemy.rect.topleft)
                 self.enemy_list.remove(enemy)
         
-        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
+        # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
         # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
+        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, checkCollide)
         if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
@@ -331,14 +335,25 @@ class Game(object):
         else:
             self.texture_increment += 1
         
-        if self.terminate:
+        if not self.terminate:
+            self.score += SCORE_STAY_ONE_FRAME
+        else:
             self.score = SCORE_LOSE
-            if self.terminate_count_down == 0:
-                self.running = False
-            else:
-                self.terminate_count_down -= 1
+            self.running = False
+            # if self.terminate_count_down == 0:
+            #     self.running = False
+            # else:
+            #     self.terminate_count_down -= 1
+
+        # if self.terminate_count_down != 0:
+        state = GameState(game=self, currentAgent=0)
+        direction = self.agent.getAction(state)
+        self.player.update(direction)
+        self.enemy_list.update()
+        self.missile_list.update()
+        self.projectile_list.update()
+
         self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
-        print self.score
     
     def display_frame(self, screen):
         if self.running:
@@ -352,8 +367,10 @@ class Game(object):
             screen.blit(self.score_text, (75, 20))
             screen.blit(self.level_text, (285, 20))
             self.explosion.draw(screen)
-            if self.terminate_count_down <= 90:
+            # if self.terminate_count_down != 0:
+            if self.terminate:
                 screen.blit(images["gameover"], (0, 0))
+                # self.terminate_count_down -= 1
         elif self.display_credits_screen:
             screen.blit(images["introImage"], (0, 0))
             screen.blit(images["creditsImage"], (80, 100))

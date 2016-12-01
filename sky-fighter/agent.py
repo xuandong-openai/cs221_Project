@@ -81,6 +81,8 @@ class MinimaxAgent(Agent):
 class AlphaBetaAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth, lowerBound, upperBound):
+            # if state.isLose():
+            #     return SCORE_LOSE, Directions.STOP
             # check if it's the terminal state
             if state.isWin() or state.isLose() or len(state.getLegalActions(index)) == 0 or depth == 0:
                 return self.evaluationFunction(state), Directions.STOP
@@ -107,5 +109,5 @@ class AlphaBetaAgent(Agent):
             return chosenValue[0], action
 
         value, action = recurse(gameState, self.index, self.depth, -INF, INF)
-        print value, action, gameState.getLegalActions(0), gameState.isLose()
+        print 'value: %s, action: %s, getScore returns: %s, isLose returns: %s, isWin returns: %s' % (value, action, gameState.getScore(), gameState.isLose(), gameState.isWin())
         return action
