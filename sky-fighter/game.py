@@ -4,6 +4,21 @@ import random
 from math import sqrt
 
 
+def checkCollide(item1, item2):
+    if item1.rect.x <= item2.rect.x:
+        xCollide = item2.rect.x - item1.rect.x < item1.rect.width
+    else:
+        xCollide = item1.rect.x - item2.rect.x < item2.rect.width
+    if item1.rect.y <= item2.rect.y:
+        yCollide = item2.rect.y - item1.rect.y < item1.rect.height
+    else:
+        yCollide = item1.rect.y - item2.rect.y < item2.rect.height
+    # print "item 1: %d, %d, %d, %d" % (item1.rect.x, item1.rect.y, item1.rect.width, item1.rect.height)
+    # print "item 2: %d, %d, %d, %d" % (item2.rect.x, item2.rect.y, item2.rect.width, item2.rect.height)
+    # print xCollide and yCollide
+    return xCollide and yCollide
+
+
 class Directions:
     UP = 'Up'
     DOWN = 'Down'
@@ -203,6 +218,8 @@ class GameState(object):
             player.updateFlight(action)
             if nextState.isLose():
                 nextState.score = SCORE_LOSE
+            else:
+                nextState.score += SCORE_STAY_ONE_FRAME
         else:
             enemy = nextState.getFlight(agentIndex)
             enemy.updateFlight(action)
