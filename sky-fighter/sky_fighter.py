@@ -193,6 +193,9 @@ class Player(pygame.sprite.Sprite):
 class Game(object):
     display_help_screen = False
     display_credits_screen = False
+    aiPlayer_normalEnemy = False
+    aiPlayer_aiEnemy = False
+    humanPlayer_aiEnemy = False
     texture_increment = -SCREEN_HEIGHT
     tick = GAME_FPS  # 60 fps = 1 second
     tick_delay = 30
@@ -214,7 +217,13 @@ class Game(object):
         self.menu_font = pygame.font.Font("FreeSansBold.ttf", 28)  # Menu font...
         self.menu_text = []
         # -----------Menu Texts------------------------------------------
-        txt = self.menu_font.render("START", True, (255, 0, 0))
+        txt = self.menu_font.render("1. CLASSIC FIGHT", True, (255, 0, 0))
+        self.menu_text.append(txt)
+        txt = self.menu_font.render("2. AI PLAYER FIGHT", True, (255, 0, 0))
+        self.menu_text.append(txt)
+        txt = self.menu_font.render("3. AI PLAYER V.S. AI ENEMY", True, (255, 0, 0))
+        self.menu_text.append(txt)
+        txt = self.menu_font.render("4. FIGHT WITH AI ENEMY", True, (255, 0, 0))
         self.menu_text.append(txt)
         txt = self.menu_font.render("HELP", True, (255, 0, 0))
         self.menu_text.append(txt)
@@ -260,7 +269,15 @@ class Game(object):
     def run_game(self):
         # if self.terminate_count_down != 0:
         state = GameState(game=self, currentAgent=0)
-        direction = self.agent.getAction(state)
+        if self.aiPlayer_normalEnemy:
+            direction = self.agent.getAction(state)
+        elif self.aiPlayer_aiEnemy:
+            print "Running both sides AI"
+        elif self.humanPlayer_aiEnemy:
+            print "Human fighting AI enemy"
+        else:
+            direction = Directions.STOP
+        
         self.player.update(direction)
         self.enemy_list.update()
         self.missile_list.update()
@@ -428,13 +445,17 @@ def main():
                 elif event.key == pygame.K_RETURN:
                     if not game.running:
                         # ------The user's menu selection----------------
-                        if game.menu_choice == 0:
+                        if game.menu_choice <= 3:
+                            game.aiPlayer_normalEnemy = True if game.menu_choice == 1 else False
+                            game.aiPlayer_aiEnemy = True if game.menu_choice == 2 else False
+                            game.humanPlayer_aiEnemy = True if game.menu_choice == 3 else False
                             game.start_game()
-                        elif game.menu_choice == 1:
+                            
+                        elif game.menu_choice == 4:
                             game.display_help_screen = True
-                        elif game.menu_choice == 2:
+                        elif game.menu_choice == 5:
                             game.display_credits_screen = True
-                        elif game.menu_choice == 3:
+                        elif game.menu_choice == 6:
                             done = True
                 
                 elif event.key == pygame.K_UP:
@@ -449,6 +470,9 @@ def main():
                     else:
                         game.display_help_screen = False
                         game.display_credits_screen = False
+                        game.aiPlayer_aiEnemy = False
+                        game.humanPlayer_aiEnemy = False
+                        game.aiPlayer_normalEnemy = False
         
         # --- Game logic should go here
         if game.running:
