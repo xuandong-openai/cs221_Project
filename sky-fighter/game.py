@@ -1,6 +1,5 @@
 from vars import *
 from math import sqrt
-from copy import deepcopy
 
 
 def checkCollide(item1, item2):
@@ -25,6 +24,10 @@ class Directions:
     LEFT = 'Left'
     RIGHT = 'Right'
     SHOOT = 'Shoot'
+    LEFT_DOWN = 'LEFT_DOWN'
+    RIGHT_DOWN = 'RIGHT_DOWN'
+    DOWN_DOWN = 'DOWN_DOWN'
+
 
 class Item(object):
     def __init__(self, rect, speed_x=0, speed_y=0, isPlayer=False):
@@ -40,34 +43,34 @@ class Item(object):
         else:
             self.speed_x = speed_x
             self.speed_y = speed_y
-    
+
     def getDistance(self, item2):
         dis = sqrt((self.x - item2.x) ** 2 + (self.y - item2.y) ** 2)
         return dis
-    
+
     def checkXCollide(self, item2):
         if self.x < item2.x:
             return item2.x - self.x < self.width
         else:
             return self.x - item2.x < item2.width
-        
+
     def checkYCollide(self, item2):
         if self.y < item2.y:
             return item2.y - self.y < self.height
         else:
             return self.y - item2.y < item2.height
-    
+
     def checkCollide(self, item2):
         return self.checkXCollide(item2) and self.checkYCollide(item2)
-    
-    def updateProjectile(self):
+
+    def updateProjectilePosition(self):
         self.x += self.speed_x
         self.y += self.speed_y
 
-    def updateMissile(self):
-        self.updateProjectile()
+    def updateMissilePosition(self):
+        self.updateProjectilePosition()
 
-    def updateFlight(self, action=None):
+    def updateFlightPosition(self, action=None):
         if action is None:
             self.x += self.speed_x
             self.y += self.speed_y
@@ -75,38 +78,47 @@ class Item(object):
             if action == Directions.SHOOT:
                 return
             elif action == Directions.UP:
-                if self.y <= self.speed_y:
+                if self.y - self.speed_y < 0:
                     self.y = 0
                 else:
                     self.y -= self.speed_y
             elif action == Directions.DOWN:
-                if self.y >= SCREEN_HEIGHT - self.height - self.speed_y:
+                if self.y + self.speed_y + self.height > SCREEN_HEIGHT:
                     self.y = SCREEN_HEIGHT - self.height
                 else:
                     self.y += self.speed_y
             elif action == Directions.LEFT:
-                if self.x <= self.speed_x:
+                if self.x - self.speed_x < 0:
                     self.x = 0
                 else:
                     self.x -= self.speed_x
             elif action == Directions.RIGHT:
-                if self.x >= SCREEN_WIDTH - self.width - self.speed_x:
+                if self.x + self.speed_x + self.width > SCREEN_WIDTH:
                     self.x = SCREEN_WIDTH - self.width
                 else:
                     self.x += self.speed_x
+            elif action == Directions.LEFT_DOWN:
+                self.x -= self.speed_x
+                self.y += self.speed_y
+            elif action == Directions.RIGHT_DOWN:
+                self.x += self.speed_x
+                self.y += self.speed_y
+            elif action == Directions.DOWN_DOWN:
+                self.y += self.speed_y
 
 
 class GameState(object):
-    def __init__(self, game=None, previousState=None, currentAgent=0):
+    def __init__(self, game=None, previousState=None, currentAgent=0, enemyIsAgent=False):
         self.enemy_list = []
         self.missile_list = []
         self.projectile_list = []
+        self.enemyIsAgent = enemyIsAgent
         state = None
         if game is not None:
             state = game
         elif previousState is not None:
             state = previousState
-        
+
         self.player = Item(state.player.rect, isPlayer=True)
         for enemy in state.enemy_list:
             self.enemy_list.append(Item(enemy.rect, speed_x=enemy.speed_x, speed_y=enemy.speed_y))
@@ -116,60 +128,64 @@ class GameState(object):
             self.missile_list.append(Item(missile.rect, speed_x=missile.speed_x, speed_y=missile.speed_y))
         self.score = state.score
         self.currentAgent = currentAgent
-    
+
     def getProjPositions(self):
         res = []
         for projectile in self.projectile_list:
             res.append((projectile.x, projectile.y))
         return res
-    
+
     def getPlayerPosition(self):
         return self.player.x, self.player.y
-    
+
     def getEnemyPositions(self):
         res = []
         for enemy in self.enemy_list:
             res.append((enemy.x, enemy.y))
         return res
-    
+
     def getFlight(self, agentIndex):
         if agentIndex == 0:
             return self.player
         return self.enemy_list[agentIndex - 1]
-    
+
     def getLegalActions(self, agentIndex):
-        res = [Directions.STOP]
-        if agentIndex == 0:
-            res.append(Directions.SHOOT)
+        legalActions = []
         flight = self.getFlight(agentIndex)
-        currentPosition = (flight.x, flight.y)
-        flightHeight = flight.height
-        flightWidth = flight.width
-        if currentPosition[0] > 0:
-            res.append(Directions.LEFT)
-        if currentPosition[0] < SCREEN_WIDTH - flightWidth:
-            res.append(Directions.RIGHT)
-        if currentPosition[1] > 0 and agentIndex == 0:
-            res.append(Directions.UP)
-        if currentPosition[1] < SCREEN_HEIGHT - flightHeight and agentIndex == 0:
-            res.append(Directions.DOWN)
-        return res
-    
+        # need to check agent's position to make sure it stays in the screen
+        if agentIndex == 0:
+            legalActions.append(Directions.STOP)
+            # legalActions.append(Directions.SHOOT)
+            if flight.x > 0:
+                legalActions.append(Directions.LEFT)
+            if flight.x < SCREEN_WIDTH - flight.width:
+                legalActions.append(Directions.RIGHT)
+            if flight.y > 0:
+                legalActions.append(Directions.UP)
+            if flight.y < SCREEN_HEIGHT - flight.height:
+                legalActions.append(Directions.DOWN)
+        # no need to check enemy's position because it can fly out of screen
+        else:
+            legalActions.append(Directions.LEFT_DOWN)
+            legalActions.append(Directions.RIGHT_DOWN)
+            legalActions.append(Directions.DOWN_DOWN)
+        return legalActions
+
     def getScore(self):
         return self.score
-    
+
     def getPlayer(self):
         return self.player
-    
+
     def getEnemies(self):
         return self.enemy_list
-    
+
     def getProjectiles(self):
         return self.projectile_list
-    
+
     def isWin(self):
         return False
-    
+
     def isLose(self):
         for enemy in self.enemy_list:
             if enemy.checkCollide(self.player):
@@ -178,8 +194,7 @@ class GameState(object):
             if projectile.checkCollide(self.player):
                 return True
         return False
-        # return self.getScore() < 0
-    
+
     def getMissileHitList(self, agentIndex):
         enemy = self.getFlight(agentIndex)
         hitList = []
@@ -187,13 +202,13 @@ class GameState(object):
             if enemy.checkCollide(missile):
                 hitList.append(missile)
         return hitList
-    
+
     def removeEnemy(self, agentIndex):
         self.enemy_list.pop(agentIndex - 1)
-    
+
     def removeMissile(self, missileIndex):
         self.missile_list.pop(missileIndex)
-    
+
     def getNextAgentIndex(self):
         return (self.currentAgent + 1) % self.getNumAgents()
 
@@ -204,14 +219,14 @@ class GameState(object):
             return 2
         else:
             return 1
-    
+
     def getNumAgents(self):
         # return len(self.enemy_list) + 1
         return 1
 
     def getNumMissisle(self):
         return len(self.missile_list)
-    
+
     def getNumProjectile(self):
         return len(self.projectile_list)
 
@@ -226,19 +241,29 @@ class GameState(object):
             return self.missile_list[-1]
         else:
             return None
-    
+
+    def updateProjectilesPositions(self):
+        for projectile in self.projectile_list:
+            projectile.updateProjectilePosition()
+
+    def updateMissilePositions(self):
+        for missile in self.missile_list:
+            missile.updateMissilePosition()
+
+    def updateEnemyPositions(self):
+        if self.enemyIsAgent:
+            for enemy in self.enemy_list:
+                enemy.updateFlightPosition()
+
     def generateSuccessor(self, agentIndex, action):
         nextAgentIndex = self.getNextAgentIndex()
         nextState = GameState(previousState=self, currentAgent=nextAgentIndex)
         if agentIndex == 0:
             player = nextState.getPlayer()
-            for projectile in nextState.projectile_list:
-                projectile.updateProjectile()
-            for missile in nextState.missile_list:
-                missile.updateMissile()
-            for enemy in nextState.enemy_list:
-                enemy.updateFlight()
-            player.updateFlight(action=action)
+            nextState.updateProjectilesPositions()
+            nextState.updateMissilePositions()
+            nextState.updateEnemyPositions()
+            player.updateFlightPosition(action=action)
             if action == Directions.SHOOT:
                 nextState.score += SCORE_FIRE_MISSILE
                 missile = Item(self.player.rect, speed_y=-MISSILE_SPEED)
@@ -260,10 +285,10 @@ class GameState(object):
                 nextState.score += SCORE_STAY_ONE_FRAME
         else:
             enemy = nextState.getFlight(agentIndex)
-            enemy.updateFlight(action)
+            enemy.updateFlightPosition(action)
             hitList = nextState.getMissileHitList(agentIndex)
             if len(hitList) > 0:
                 nextState.score += SCORE_HIT_ENEMY
-                nextState.removeEnemy(nextAgentIndex)
-                nextState.currentAgent = nextAgentIndex % nextState.getNumAgents()
+            if enemy.checkCollide(nextState.player):
+                nextState.score = SCORE_LOSE
         return nextState

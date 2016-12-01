@@ -90,10 +90,10 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
 
 
 class Agent:
-    def __init__(self, depth='0'):
+    def __init__(self, depth=1):
         self.index = 0
         self.evaluationFunction = scoreEvaluationFunction
-        self.depth = int(depth)
+        self.depth = depth
 
 
 class MinimaxAgent(Agent):
@@ -164,16 +164,17 @@ class ExpectimaxAgent(Agent):
         def recurse(state, index, depth):
             # check if it's the terminal state
             if state.isWin() or state.isLose():
-                return state.getScore(), Directions.STOP
+                if index == 0:
+                    return state.getScore(), Directions.STOP
+                else:
+                    return state.getScore(), Directions.DOWN_DOWN
             if len(state.getLegalActions(index)) == 0 or depth == 0:
                 # if index == 0:
                 	# print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
                 if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
                 	return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
                 else:
-                	return self.evaluationFunction(state), Directions.STOP
-                # else:
-                #     return state.getScore(), Directions.STOP
+                    return self.evaluationFunction(state), Directions.DOWN_DOWN
 
             nextIndex = (index + 1) % state.getNumAgents()
             nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth

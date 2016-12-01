@@ -71,18 +71,14 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.x += self.speed_x
             self.rect.y += self.speed_y
         else:
-            if action == Directions.DOWN:
-                    self.rect.top += self.speed_y
-            elif action == Directions.LEFT:
-                if self.rect.left <= 0:
-                    self.rect.left = 0
-                else:
-                    self.rect.left -= self.speed_x
-            elif action == Directions.RIGHT:
-                if self.rect.left >= SCREEN_WIDTH - self.rect.width:
-                    self.rect.left = SCREEN_WIDTH - self.rect.width
-                else:
-                    self.rect.left += self.speed_x
+            if action == Directions.LEFT_DOWN:
+                self.rect.x -= self.speed_x
+                self.rect.y += self.speed_y
+            elif action == Directions.RIGHT_DOWN:
+                self.rect.x += self.speed_x
+                self.rect.y += self.speed_y
+            elif action == Directions.DOWN_DOWN:
+                self.rect.y += self.speed_y
         self.updateProjectiles()
     
     # enemy can shoot multiple missiles
@@ -230,17 +226,15 @@ class Game(object):
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
         # self.agent = agent.MinimaxAgent()
-        # self.agent = agent.AlphaBetaAgent()
-        self.agent = agent.ExpectimaxAgent()
+        self.agent = agent.AlphaBetaAgent()
+        # self.agent = agent.ExpectimaxAgent()
     
     def scroll_menu_up(self):
-        if self.menu_choice > 0:
-            self.menu_choice -= 1
-    
+        self.menu_choice = (self.menu_choice - 1) % len(self.menu_text)
+
     def scroll_menu_down(self):
-        if self.menu_choice + 1 < len(self.menu_text):
-            self.menu_choice += 1
-    
+        self.menu_choice = (self.menu_choice + 1) % len(self.menu_text)
+
     def start_game(self):
         self.running = True
         sounds["plane"].play(-1)  # Start the plane sound;
@@ -257,7 +251,28 @@ class Game(object):
         self.level = 1
         self.score_text = self.font.render("Score: 0", True, (255, 255, 255))
         self.level_text = self.font.render("Level: 1", True, (255, 255, 255))
-    
+
+    def clear_out_of_bound_enemy(self):
+        for enemy in self.enemy_list:
+            if enemy.rect.x < -ENEMY_SIZE or enemy.rect.x > SCREEN_WIDTH:
+                self.enemy_list.remove(enemy)
+            elif enemy.rect.y < -ENEMY_SIZE or enemy.rect.y > SCREEN_HEIGHT:
+                self.enemy_list.remove(enemy)
+
+    def clear_out_of_bound_projectile(self):
+        for projectile in self.projectile_list:
+            if projectile.rect.x < 0 or projectile.rect.x > SCREEN_WIDTH:
+                self.projectile_list.remove(projectile)
+            elif projectile.rect.y < - PROJECTILE_SIZE or projectile.rect.y > SCREEN_HEIGHT:
+                self.projectile_list.remove(projectile)
+
+    def clear_out_of_bound_missile(self):
+        for missile in self.missile_list:
+            if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
+                self.missile_list.remove(missile)
+            elif missile.rect.y < - MISSILE_HEIGHT or missile.rect.y > SCREEN_HEIGHT:
+                self.missile_list.remove(missile)
+
     def run_game(self):
         # if self.terminate_count_down != 0:
         if self.aiPlayer_normalEnemy:
@@ -268,16 +283,15 @@ class Game(object):
                 self.shoot()
             self.enemy_list.update()
         elif self.aiPlayer_aiEnemy:
+            playerState = GameState(game=self, currentAgent=0)
+            direction = self.agent.getAction(playerState)
+            self.player.update(direction)
             i = 1
             for enemy in self.enemy_list:
-                state = GameState(game=self, currentAgent=i)
-                enemy.update(self.agent.getAction(state))  # Need enemy update function to update according to action
-                enemy.update(Directions.DOWN)
+                state = GameState(game=self, currentAgent=i, enemyIsAgent=True)
+                direction = self.agent.getAction(state)
+                enemy.update(direction)  # Need enemy update function to update according to action
                 i += 1
-            playerState = GameState(game=self, currentAgent=0)
-            self.player.update(self.agent.getAction(playerState))
-            
-            print "Running both sides AI"
         elif self.humanPlayer_aiEnemy:
             print "Human fighting AI enemy"
         else:
@@ -287,26 +301,10 @@ class Game(object):
         self.missile_list.update()
         self.projectile_list.update()
         
-        # clear out of bound missiles
-        for missile in self.missile_list:
-            if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
-                self.missile_list.remove(missile)
-            elif missile.rect.y < - MISSILE_HEIGHT or missile.rect.y > SCREEN_HEIGHT:
-                self.missile_list.remove(missile)
-        
-        # clear out of bound projectiles
-        for projectile in self.projectile_list:
-            if projectile.rect.x < 0 or projectile.rect.x > SCREEN_WIDTH:
-                self.projectile_list.remove(projectile)
-            elif projectile.rect.y < - PROJECTILE_SIZE or projectile.rect.y > SCREEN_HEIGHT:
-                self.projectile_list.remove(projectile)
-        
-        # clear out of bound enemies
-        for enemy in self.enemy_list:
-            if enemy.rect.x < -ENEMY_WIDTH or enemy.rect.x > SCREEN_WIDTH:
-                self.enemy_list.remove(enemy)
-            elif enemy.rect.y < -ENEMY_WIDTH or enemy.rect.y > SCREEN_HEIGHT:
-                self.enemy_list.remove(enemy)
+        # clear out of bound objects (missile, project, enemy)
+        self.clear_out_of_bound_missile()
+        self.clear_out_of_bound_projectile()
+        self.clear_out_of_bound_enemy()
         
         # clear hit enemies
         for enemy in self.enemy_list:
