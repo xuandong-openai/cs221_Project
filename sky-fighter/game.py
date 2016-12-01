@@ -139,7 +139,9 @@ class GameState(object):
         return self.enemy_list[agentIndex - 1]
     
     def getLegalActions(self, agentIndex):
-        res = [Directions.STOP, Directions.SHOOT]
+        res = [Directions.STOP]
+        if agentIndex == 0:
+            res.append(Directions.SHOOT)
         flight = self.getFlight(agentIndex)
         currentPosition = (flight.x, flight.y)
         flightHeight = flight.height
@@ -205,8 +207,8 @@ class GameState(object):
             return 1
     
     def getNumAgents(self):
-        return len(self.enemy_list) + 1
-        # return 1
+        # return len(self.enemy_list) + 1
+        return 1
 
     def getNumMissisle(self):
         return len(self.missile_list)
@@ -229,12 +231,15 @@ class GameState(object):
             for enemy in nextState.enemy_list:
                 enemy.updateFlight()
             player.updateFlight(action=action)
-            if action == Directions.SHOOT:
-                playerRect = nextState.player.rect
-                missileRect= playerRect
-                missileRect.x = missileRect.x + playerRect.width / 2 - MISSILE_WIDTH
-                missile = Item(self.player.rect, speed_y=-MISSILE_SPEED)
-                nextState.missile_list.append(missile)
+            # if action == Directions.SHOOT:
+            #     playerRect = nextState.player.rect
+            #     missileRect= playerRect
+            #     missileRect.x = missileRect.x + playerRect.width / 2 - MISSILE_WIDTH / 2
+            #     missileRect.y = missileRect.y + playerRect.height / 2 - MISSILE_HEIGHT / 2
+            #     missileRect.width = MISSILE_WIDTH
+            #     missileRect.height = MISSILE_HEIGHT
+            #     missile = Item(missileRect, speed_y=-MISSILE_SPEED)
+            #     nextState.missile_list.append(missile)
             if nextState.isLose():
                 nextState.score = SCORE_LOSE
             else:
