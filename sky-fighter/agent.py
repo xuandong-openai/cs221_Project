@@ -10,9 +10,9 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
     pos = currentGameState.getPlayerPosition()
     missile = currentGameState.getLastMissile()
     enemies = currentGameState.getEnemies()
-    
+
     # mislePos = currentGameState.getMissilePositions()
-    
+
     def getManhattanDistance(pos1, pos2):
         return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
@@ -53,7 +53,7 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
                     break
     # if missile is not None and abs(missile.rect.y - pos[1]) == 2:
     if missile is not None:
-    	m_x, m_y = missile.rect.x, missile.rect.y
+        m_x, m_y = missile.rect.x, missile.rect.y
         print 'she la!!!', getManhattanDistance((m_x, m_y), pos)
 
     # calculate the number of threats in a range centered at player's position

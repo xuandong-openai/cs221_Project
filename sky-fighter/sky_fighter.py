@@ -71,18 +71,14 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.x += self.speed_x
             self.rect.y += self.speed_y
         else:
-            if action == Directions.DOWN:
-                    self.rect.top += self.speed_y
-            elif action == Directions.LEFT:
-                if self.rect.left <= 0:
-                    self.rect.left = 0
-                else:
-                    self.rect.left -= self.speed_x
-            elif action == Directions.RIGHT:
-                if self.rect.left >= SCREEN_WIDTH - self.rect.width:
-                    self.rect.left = SCREEN_WIDTH - self.rect.width
-                else:
-                    self.rect.left += self.speed_x
+            if action == Directions.LEFT_DOWN:
+                self.rect.x -= self.speed_x
+                self.rect.y += self.speed_y
+            elif action == Directions.RIGHT_DOWN:
+                self.rect.x += self.speed_x
+                self.rect.y += self.speed_y
+            elif action == Directions.DOWN_DOWN:
+                self.rect.y += self.speed_y
         self.updateProjectiles()
     
     # enemy can shoot multiple missiles
@@ -234,13 +230,11 @@ class Game(object):
         self.agent = agent.ExpectimaxAgent()
     
     def scroll_menu_up(self):
-        if self.menu_choice > 0:
-            self.menu_choice -= 1
-    
+        self.menu_choice = (self.menu_choice - 1) % len(self.menu_text)
+
     def scroll_menu_down(self):
-        if self.menu_choice + 1 < len(self.menu_text):
-            self.menu_choice += 1
-    
+        self.menu_choice = (self.menu_choice + 1) % len(self.menu_text)
+
     def start_game(self):
         self.running = True
         sounds["plane"].play(-1)  # Start the plane sound;
@@ -268,15 +262,15 @@ class Game(object):
                 self.shoot()
             self.enemy_list.update()
         elif self.aiPlayer_aiEnemy:
+            playerState = GameState(game=self, currentAgent=0)
+            direction = self.agent.getAction(playerState)
+            self.player.update(direction)
             i = 1
             for enemy in self.enemy_list:
                 state = GameState(game=self, currentAgent=i)
                 enemy.update(self.agent.getAction(state))  # Need enemy update function to update according to action
                 enemy.update(Directions.DOWN)
                 i += 1
-            playerState = GameState(game=self, currentAgent=0)
-            self.player.update(self.agent.getAction(playerState))
-            
             print "Running both sides AI"
         elif self.humanPlayer_aiEnemy:
             print "Human fighting AI enemy"
