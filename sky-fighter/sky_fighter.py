@@ -251,7 +251,28 @@ class Game(object):
         self.level = 1
         self.score_text = self.font.render("Score: 0", True, (255, 255, 255))
         self.level_text = self.font.render("Level: 1", True, (255, 255, 255))
-    
+
+    def clear_out_of_bound_enemy(self):
+        for enemy in self.enemy_list:
+            if enemy.rect.x < -ENEMY_SIZE or enemy.rect.x > SCREEN_WIDTH:
+                self.enemy_list.remove(enemy)
+            elif enemy.rect.y < -ENEMY_SIZE or enemy.rect.y > SCREEN_HEIGHT:
+                self.enemy_list.remove(enemy)
+
+    def clear_out_of_bound_projectile(self):
+        for projectile in self.projectile_list:
+            if projectile.rect.x < 0 or projectile.rect.x > SCREEN_WIDTH:
+                self.projectile_list.remove(projectile)
+            elif projectile.rect.y < - PROJECTILE_SIZE or projectile.rect.y > SCREEN_HEIGHT:
+                self.projectile_list.remove(projectile)
+
+    def clear_out_of_bound_missile(self):
+        for missile in self.missile_list:
+            if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
+                self.missile_list.remove(missile)
+            elif missile.rect.y < - MISSILE_HEIGHT or missile.rect.y > SCREEN_HEIGHT:
+                self.missile_list.remove(missile)
+
     def run_game(self):
         # if self.terminate_count_down != 0:
         if self.aiPlayer_normalEnemy:
@@ -281,26 +302,10 @@ class Game(object):
         self.missile_list.update()
         self.projectile_list.update()
         
-        # clear out of bound missiles
-        for missile in self.missile_list:
-            if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
-                self.missile_list.remove(missile)
-            elif missile.rect.y < - MISSILE_HEIGHT or missile.rect.y > SCREEN_HEIGHT:
-                self.missile_list.remove(missile)
-        
-        # clear out of bound projectiles
-        for projectile in self.projectile_list:
-            if projectile.rect.x < 0 or projectile.rect.x > SCREEN_WIDTH:
-                self.projectile_list.remove(projectile)
-            elif projectile.rect.y < - PROJECTILE_SIZE or projectile.rect.y > SCREEN_HEIGHT:
-                self.projectile_list.remove(projectile)
-        
-        # clear out of bound enemies
-        for enemy in self.enemy_list:
-            if enemy.rect.x < -ENEMY_WIDTH or enemy.rect.x > SCREEN_WIDTH:
-                self.enemy_list.remove(enemy)
-            elif enemy.rect.y < -ENEMY_WIDTH or enemy.rect.y > SCREEN_HEIGHT:
-                self.enemy_list.remove(enemy)
+        # clear out of bound objects (missile, project, enemy)
+        self.clear_out_of_bound_missile()
+        self.clear_out_of_bound_projectile()
+        self.clear_out_of_bound_enemy()
         
         # clear hit enemies
         for enemy in self.enemy_list:

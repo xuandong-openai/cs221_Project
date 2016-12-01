@@ -63,12 +63,12 @@ class Item(object):
     def checkCollide(self, item2):
         return self.checkXCollide(item2) and self.checkYCollide(item2)
 
-    def updateProjectile(self):
+    def updateProjectilePosition(self):
         self.x += self.speed_x
         self.y += self.speed_y
 
-    def updateMissile(self):
-        self.updateProjectile()
+    def updateMissilePosition(self):
+        self.updateProjectilePosition()
 
     def updateFlightPosition(self, action=None):
         if action is None:
@@ -108,10 +108,11 @@ class Item(object):
 
 
 class GameState(object):
-    def __init__(self, game=None, previousState=None, currentAgent=0):
+    def __init__(self, game=None, previousState=None, currentAgent=0, enemyIsAgent=False):
         self.enemy_list = []
         self.missile_list = []
         self.projectile_list = []
+        self.enemyIsAgent = enemyIsAgent
         state = None
         if game is not None:
             state = game
@@ -241,17 +242,27 @@ class GameState(object):
         else:
             return None
 
+    def updateProjectilesPositions(self):
+        for projectile in self.projectile_list:
+            projectile.updateProjectilePosition()
+
+    def updateMissilePositions(self):
+        for missile in self.missile_list:
+            missile.updateMissilePosition()
+
+    def updateEnemyPositions(self):
+        if self.enemyIsAgent:
+            for enemy in self.enemy_list:
+                enemy.updateFlightPosition()
+
     def generateSuccessor(self, agentIndex, action):
         nextAgentIndex = self.getNextAgentIndex()
         nextState = GameState(previousState=self, currentAgent=nextAgentIndex)
         if agentIndex == 0:
             player = nextState.getPlayer()
-            for projectile in nextState.projectile_list:
-                projectile.updateProjectile()
-            for missile in nextState.missile_list:
-                missile.updateMissile()
-            for enemy in nextState.enemy_list:
-                enemy.updateFlightPosition()
+            nextState.updateProjectilesPositions()
+            nextState.updateMissilePositions()
+            nextState.updateEnemyPositions()
             player.updateFlightPosition(action=action)
             if action == Directions.SHOOT:
                 nextState.score += SCORE_FIRE_MISSILE
@@ -278,6 +289,6 @@ class GameState(object):
             hitList = nextState.getMissileHitList(agentIndex)
             if len(hitList) > 0:
                 nextState.score += SCORE_HIT_ENEMY
-                nextState.removeEnemy(nextAgentIndex)
-                nextState.currentAgent = nextAgentIndex % nextState.getNumAgents()
+            if enemy.checkCollide(nextState.player):
+                nextState.score = SCORE_LOSE
         return nextState
