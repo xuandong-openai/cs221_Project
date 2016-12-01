@@ -192,7 +192,7 @@ class Game(object):
     display_credits_screen = False
     texture_increment = -SCREEN_HEIGHT
     tick = GAME_FPS  # 60 fps = 1 second
-    tick_delay = 35
+    tick_delay = 30
     level = 1
     running = False
     menu_choice = 0
@@ -226,8 +226,8 @@ class Game(object):
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
         # self.agent = agent.MinimaxAgent()
-        self.agent = agent.AlphaBetaAgent()
-        # self.agent = agent.ExpectimaxAgent()
+        # self.agent = agent.AlphaBetaAgent()
+        self.agent = agent.ExpectimaxAgent()
     
     def scroll_menu_up(self):
         if self.menu_choice > 0:
@@ -327,7 +327,7 @@ class Game(object):
             enemy = Enemy(random.choice((images["enemy1"], images["enemy2"], images["enemy3"])), self.projectile_list,
                           self.tick_delay)
             enemy.projectile_image = images["projectile"]
-            if len(self.enemy_list) <= 1:
+            if len(self.enemy_list) <= 2:
                 self.enemy_list.add(enemy)
             self.tick = self.tick_delay
         else:
