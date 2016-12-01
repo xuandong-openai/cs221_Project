@@ -221,8 +221,10 @@ class GameState(object):
             return 1
 
     def getNumAgents(self):
-        # return len(self.enemy_list) + 1
-        return 1
+        if self.enemyIsAgent:
+            return len(self.enemy_list) + 1
+        else:
+            return 1
 
     def getNumMissisle(self):
         return len(self.missile_list)
