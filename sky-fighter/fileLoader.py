@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import pygame
 from collections import Counter
+from vars import *
 
 
 def loadImages():
