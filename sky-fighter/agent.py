@@ -49,7 +49,7 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
                 e_x, e_y = enemy.rect.x, enemy.rect.y
                 ev_x, ev_y = enemy.speed_x, enemy.speed_y
                 # print e_x, e_y, ev_x, ev_y
-                for t in range(1, SCREEN_HEIGHT / mv_y):
+                for t in range(1, m_y / mv_y):
                     newEnemyPos = e_x + ev_x * t, e_y + ev_y * t
                     newMislePos = m_x, m_y - mv_y * t
                     if checkEMCollide(newEnemyPos, newMislePos):
