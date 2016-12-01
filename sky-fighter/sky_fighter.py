@@ -40,22 +40,26 @@ class Enemy(pygame.sprite.Sprite):
     tick = shootFreezetime  # time before enemy shoots missiles
     projectile_image = None
     
-    def __init__(self, img, projectile_list, tick_delay):
+    def __init__(self, img, projectile_list, tick_delay, player):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.topleft = (random.randint(0, 640), -50)
-        if self.rect.x < 105:
-            self.speed_x = random.randint(0, 5)
-        elif self.rect.x < 210:
-            self.speed_x = random.randint(-1, 5)
-        elif self.rect.x < 315:
-            self.speed_x = random.randint(-3, 3)
-        elif self.rect.x < 420:
-            self.speed_x = random.randint(-5, -1)
-        else:
-            self.speed_x = random.randint(-5, 0)
+        self.player = player
+        # if self.rect.x < 105:
+        #     self.speed_x = random.randint(0, 5)
+        # elif self.rect.x < 210:
+        #     self.speed_x = random.randint(-1, 5)
+        # elif self.rect.x < 315:
+        #     self.speed_x = random.randint(-3, 3)
+        # elif self.rect.x < 420:
+        #     self.speed_x = random.randint(-5, -1)
+        # else:
+        #     self.speed_x = random.randint(-5, 0)
+        self.splitSpeed = SCREEN_WIDTH / 5
+        self.speed_x = (self.player.rect.x - self.rect.x) / self.splitSpeed
+
         self.projectile_list = projectile_list
         self.speed_y = random.randint(3, 7)
         self.tick_delay = tick_delay
@@ -324,7 +328,7 @@ class Game(object):
         
         if self.tick == 0:
             enemy = Enemy(random.choice((images["enemy1"], images["enemy2"], images["enemy3"])), self.projectile_list,
-                          self.tick_delay)
+                          self.tick_delay, self.player)
             enemy.projectile_image = images["projectile"]
             if len(self.enemy_list) <= 2:
                 self.enemy_list.add(enemy)

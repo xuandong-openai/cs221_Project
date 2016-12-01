@@ -28,7 +28,7 @@ def scoreEvaluationFunction(currentGameState):
     threatDistScore = -50 * closestEnemy - 100 * closestProj
 
     # punish the score if flying too wide
-    distToCenterScore = -abs(pos[0] - (SCREEN_WIDTH - PLAYER_SIZE) / 2)**2 / 32 - abs(int(0.85 * SCREEN_HEIGHT) - pos[1]) / 64
+    distToCenterScore = -abs(pos[0] - (SCREEN_WIDTH - PLAYER_SIZE) / 2)**2 / 32 - abs(int(0.5 * SCREEN_HEIGHT) - pos[1]) / 64
 
     # current game score
     gameScore = currentGameState.getScore()
