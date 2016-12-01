@@ -25,7 +25,7 @@ class Directions:
     STOP = 'Stop'
     LEFT = 'Left'
     RIGHT = 'Right'
-
+    SHOOT = 'Shoot'
 
 class Item(object):
     def __init__(self, rect, speed_x=0, speed_y=0, isPlayer=False):
@@ -64,13 +64,18 @@ class Item(object):
     def updateProjectile(self):
         self.x += self.speed_x
         self.y += self.speed_y
-    
+
+    def updateMissile(self):
+        self.updateProjectile()
+
     def updateFlight(self, action=None):
         if action is None:
             self.x += self.speed_x
             self.y += self.speed_y
         else:
-            if action == Directions.UP:
+            if action == Directions.SHOOT:
+                return
+            elif action == Directions.UP:
                 if self.y <= self.speed_y:
                     self.y = 0
                 else:
@@ -134,7 +139,7 @@ class GameState(object):
         return self.enemy_list[agentIndex - 1]
     
     def getLegalActions(self, agentIndex):
-        res = [Directions.STOP]
+        res = [Directions.STOP, Directions.SHOOT]
         flight = self.getFlight(agentIndex)
         currentPosition = (flight.x, flight.y)
         flightHeight = flight.height
@@ -200,14 +205,17 @@ class GameState(object):
             return 1
     
     def getNumAgents(self):
-        # return len(self.enemy_list) + 1
-        return 1
-    
+        return len(self.enemy_list) + 1
+        # return 1
+
     def getNumMissisle(self):
         return len(self.missile_list)
     
     def getNumProjectile(self):
         return len(self.projectile_list)
+
+    def getMissileList(self):
+        return self.missile_list
     
     def generateSuccessor(self, agentIndex, action):
         nextAgentIndex = self.getNextAgentIndex()
@@ -217,10 +225,16 @@ class GameState(object):
             for projectile in nextState.projectile_list:
                 projectile.updateProjectile()
             for missile in nextState.missile_list:
-                missile.updateProjectile()
+                missile.updateMissile()
             for enemy in nextState.enemy_list:
                 enemy.updateFlight()
             player.updateFlight(action=action)
+            if action == Directions.SHOOT:
+                playerRect = nextState.player.rect
+                missileRect= playerRect
+                missileRect.x = missileRect.x + playerRect.width / 2 - MISSILE_WIDTH
+                missile = Item(self.player.rect, speed_y=-MISSILE_SPEED)
+                nextState.missile_list.append(missile)
             if nextState.isLose():
                 nextState.score = SCORE_LOSE
             else:
