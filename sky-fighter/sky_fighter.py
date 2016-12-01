@@ -226,8 +226,8 @@ class Game(object):
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
         # self.agent = agent.MinimaxAgent()
-        # self.agent = agent.AlphaBetaAgent()
-        self.agent = agent.ExpectimaxAgent()
+        self.agent = agent.AlphaBetaAgent()
+        # self.agent = agent.ExpectimaxAgent()
     
     def scroll_menu_up(self):
         self.menu_choice = (self.menu_choice - 1) % len(self.menu_text)
@@ -288,11 +288,10 @@ class Game(object):
             self.player.update(direction)
             i = 1
             for enemy in self.enemy_list:
-                state = GameState(game=self, currentAgent=i)
-                enemy.update(self.agent.getAction(state))  # Need enemy update function to update according to action
-                enemy.update(Directions.DOWN)
+                state = GameState(game=self, currentAgent=i, enemyIsAgent=True)
+                direction = self.agent.getAction(state)
+                enemy.update(direction)  # Need enemy update function to update according to action
                 i += 1
-            print "Running both sides AI"
         elif self.humanPlayer_aiEnemy:
             print "Human fighting AI enemy"
         else:

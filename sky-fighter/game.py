@@ -154,7 +154,7 @@ class GameState(object):
         flight = self.getFlight(agentIndex)
         # need to check agent's position to make sure it stays in the screen
         if agentIndex == 0:
-            legalActions.append([Directions.STOP])
+            legalActions.append(Directions.STOP)
             # legalActions.append(Directions.SHOOT)
             if flight.x > 0:
                 legalActions.append(Directions.LEFT)
