@@ -46,8 +46,6 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.topleft = (random.randint(0, 640), -50)
-        # print "my width: %d" % self.rect.width
-        # print "my height: %d" % self.rect.height
         if self.rect.x < 105:
             self.speed_x = random.randint(0, 5)
         elif self.rect.x < 210:
@@ -97,15 +95,14 @@ class Enemy(pygame.sprite.Sprite):
             projectiles = [None] * self.sprayNum
             for i in range(self.sprayNum):
                 projectiles[i] = Projectile(self.rect.center, self.projectile_image)
-            myx = self.speed_x
-            diff = 0
             for i in range(self.sprayNum):
-                if i % 2 == 0:
-                    projectiles[i].speed_x = myx - diff
+                if i == 0:
+                    projectiles[i].speed_x = self.speed_x - self.sprayDiff
+                elif i == 1:
+                    projectiles[i].speed_x = self.speed_x
                 else:
-                    projectiles[i].speed_x = myx + diff
+                    projectiles[i].speed_x = self.speed_x + self.sprayDiff
                 self.projectile_list.add(projectiles[i])
-                diff -= self.sprayDiff
             self.tick = self.tick_delay
         else:
             self.tick -= 1
@@ -115,12 +112,14 @@ class Missile(pygame.sprite.Sprite):
     def __init__(self, pos, img, speed_x=0, speed_y=0):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("files/missile.png").convert_alpha()
-        images["missile"] = pygame.transform.scale(self.image, (MISSILE_SIZE_W, MISSILE_SIZE_H))
+        images["missile"] = pygame.transform.scale(self.image, (MISSILE_WIDTH, MISSILE_HEIGHT))
         # self.image = img
         self.rect = self.image.get_rect()
         self.rect.center = pos
         self.speed_x = speed_x
         self.speed_y = speed_y
+        self.rect.width = MISSILE_WIDTH
+        self.rect.height = MISSILE_HEIGHT
     
     def update(self):
         self.rect.x += self.speed_x
@@ -266,7 +265,7 @@ class Game(object):
         for missile in self.missile_list:
             if missile.rect.x < 0 or missile.rect.x > SCREEN_WIDTH:
                 self.missile_list.remove(missile)
-            elif missile.rect.y < - MISSILE_SIZE or missile.rect.y > SCREEN_HEIGHT:
+            elif missile.rect.y < - MISSILE_HEIGHT or missile.rect.y > SCREEN_HEIGHT:
                 self.missile_list.remove(missile)
         
         # clear out of bound projectiles
@@ -278,9 +277,9 @@ class Game(object):
         
         # clear out of bound enemies
         for enemy in self.enemy_list:
-            if enemy.rect.x < -ENEMY_SIZE or enemy.rect.x > SCREEN_WIDTH:
+            if enemy.rect.x < -ENEMY_WIDTH or enemy.rect.x > SCREEN_WIDTH:
                 self.enemy_list.remove(enemy)
-            elif enemy.rect.y < -ENEMY_SIZE or enemy.rect.y > SCREEN_HEIGHT:
+            elif enemy.rect.y < -ENEMY_WIDTH or enemy.rect.y > SCREEN_HEIGHT:
                 self.enemy_list.remove(enemy)
         
         # clear hit enemies
@@ -301,9 +300,9 @@ class Game(object):
                         self.tick_delay = self.level2EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
         
-        # hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
+        hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
         # hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
-        hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False, checkCollide)
+        # hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False, checkCollide)
         if len(hit_list1) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
@@ -312,9 +311,9 @@ class Game(object):
                 self.explosion.add(enemy.rect.topleft)
                 self.enemy_list.remove(enemy)
         
-        # hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
+        hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
         # hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
-        hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False, checkCollide)
+        # hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False, checkCollide)
         if len(hit_list2) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
@@ -382,6 +381,7 @@ class Game(object):
     def shoot(self):
         missile = Missile(self.player.rect.center, images["missile"], speed_y=-MISSILE_SPEED)
         self.missile_list.add(missile)
+        self.score += SCORE_FIRE_MISSILE
 
 
 def main():

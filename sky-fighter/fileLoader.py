@@ -3,13 +3,6 @@
 import pygame
 from collections import Counter
 
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 640
-ENEMY_SIZE = 80
-MISSILE_SIZE_H = 40
-MISSILE_SIZE_W = 20
-PROJECTILE_SIZE = 20
-
 
 def loadImages():
     images = Counter()
@@ -39,7 +32,7 @@ def loadImages():
     images["background"] = pygame.image.load("files/background.png").convert()
     images["background"] = pygame.transform.scale(images["background"], (SCREEN_WIDTH, SCREEN_HEIGHT))
     images["missile"] = pygame.image.load("files/missile.png").convert_alpha()
-    images["missile"] = pygame.transform.scale(images["missile"], (MISSILE_SIZE_W, MISSILE_SIZE_H))
+    images["missile"] = pygame.transform.scale(images["missile"], (MISSILE_WIDTH, MISSILE_HEIGHT))
     images["projectile"] = pygame.image.load("files/projectile.png").convert()
     images["projectile"].set_colorkey((0,0,0))
     images["projectile"] = pygame.transform.scale(images["projectile"], (PROJECTILE_SIZE, PROJECTILE_SIZE))
