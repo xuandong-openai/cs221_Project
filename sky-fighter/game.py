@@ -65,7 +65,7 @@ class Item(object):
         self.x += self.speed_x
         self.y += self.speed_y
     
-    def updateFlight(self, action):
+    def updateFlight(self, action=None):
         if action is None:
             self.x += self.speed_x
             self.y += self.speed_y
@@ -190,7 +190,7 @@ class GameState(object):
     
     def getNextAgentIndex(self):
         return (self.currentAgent + 1) % self.getNumAgents()
-    
+
     def getLevel(self):
         if self.getScore() >= SCORE_LEVEL_THREE:
             return 3
@@ -200,7 +200,8 @@ class GameState(object):
             return 1
     
     def getNumAgents(self):
-        return len(self.enemy_list) + 1
+        # return len(self.enemy_list) + 1
+        return 1
     
     def getNumMissisle(self):
         return len(self.missile_list)
@@ -213,9 +214,13 @@ class GameState(object):
         nextState = GameState(previousState=self, currentAgent=nextAgentIndex)
         if agentIndex == 0:
             player = nextState.getPlayer()
-            for projectile in self.projectile_list:
+            for projectile in nextState.projectile_list:
                 projectile.updateProjectile()
-            player.updateFlight(action)
+            for missile in nextState.missile_list:
+                missile.updateProjectile()
+            for enemy in nextState.enemy_list:
+                enemy.updateFlight()
+            player.updateFlight(action=action)
             if nextState.isLose():
                 nextState.score = SCORE_LOSE
             else:

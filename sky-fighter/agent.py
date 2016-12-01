@@ -40,8 +40,8 @@ def scoreEvaluationFunction(currentGameState):
     else:
         horizontalScore = sum(horizontalDist) / 4
 
-    # totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore]
-    totalScore = [gameScore]
+    totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore]
+    # totalScore = [gameScore]
     return sum(totalScore)
 
 
@@ -56,7 +56,9 @@ class MinimaxAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth):
             # check if it's the terminal state
-            if state.isWin() or state.isLose() or len(state.getLegalActions(index)) == 0 or depth == 0:
+            if state.isWin() or state.isLose():
+                return state.getScore(), Directions.STOP
+            if len(state.getLegalActions(index)) == 0 or depth == 0:
                 return self.evaluationFunction(state), Directions.STOP
             
             nextIndex = (index + 1) % state.getNumAgents()
@@ -81,10 +83,10 @@ class MinimaxAgent(Agent):
 class AlphaBetaAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth, lowerBound, upperBound):
-            # if state.isLose():
-            #     return SCORE_LOSE, Directions.STOP
             # check if it's the terminal state
-            if state.isWin() or state.isLose() or len(state.getLegalActions(index)) == 0 or depth == 0:
+            if state.isWin() or state.isLose():
+                return state.getScore(), Directions.STOP
+            if len(state.getLegalActions(index)) == 0 or depth == 0:
                 return self.evaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()

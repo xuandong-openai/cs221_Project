@@ -134,6 +134,8 @@ class Projectile(Missile):
         self.image.set_colorkey((0, 0, 0))
         self.image = pygame.transform.scale(self.image, (PROJECTILE_SIZE, PROJECTILE_SIZE))
         self.mask = pygame.mask.from_surface(self.image)
+        self.rect.width = PROJECTILE_SIZE
+        self.rect.height = PROJECTILE_SIZE
         self.speed_y = 8
 
 
@@ -253,12 +255,12 @@ class Game(object):
     
     def run_game(self):
         # if self.terminate_count_down != 0:
-        #     state = GameState(game=self, currentAgent=0)
-        #     direction = self.agent.getAction(state)
-        #     self.player.update(direction)
-        # self.enemy_list.update()
-        # self.missile_list.update()
-        # self.projectile_list.update()
+        state = GameState(game=self, currentAgent=0)
+        direction = self.agent.getAction(state)
+        self.player.update(direction)
+        self.enemy_list.update()
+        self.missile_list.update()
+        self.projectile_list.update()
         
         # clear out of bound missiles
         for missile in self.missile_list:
@@ -299,25 +301,25 @@ class Game(object):
                         self.tick_delay = self.level2EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
         
-        # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
-        # hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
-        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, checkCollide)
-        if len(hit_list) > 0 and not self.terminate:
+        # hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
+        # hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
+        hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False, checkCollide)
+        if len(hit_list1) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
             sounds["plane"].stop()
-            for enemy in hit_list:
+            for enemy in hit_list1:
                 self.explosion.add(enemy.rect.topleft)
                 self.enemy_list.remove(enemy)
         
-        # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
-        # hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
-        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, checkCollide)
-        if len(hit_list) > 0 and not self.terminate:
+        # hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
+        # hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
+        hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False, checkCollide)
+        if len(hit_list2) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
             sounds["plane"].stop()
-            for projectile in hit_list:
+            for projectile in hit_list2:
                 self.projectile_list.remove(projectile)
         
         if self.tick == 0:
@@ -344,14 +346,6 @@ class Game(object):
             #     self.running = False
             # else:
             #     self.terminate_count_down -= 1
-
-        # if self.terminate_count_down != 0:
-        state = GameState(game=self, currentAgent=0)
-        direction = self.agent.getAction(state)
-        self.player.update(direction)
-        self.enemy_list.update()
-        self.missile_list.update()
-        self.projectile_list.update()
 
         self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
     
@@ -457,12 +451,12 @@ def main():
         # First, clear the screen to white. Don't put other drawing commands
         # above this, or they will be erased with this command.
         screen.fill((255, 255, 255))
-        
+
         # --- Drawing code should go here
         game.display_frame(screen)
         # --- Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
-        
+
         # --- Limit to 30 frames per second
         clock.tick(GAME_FPS)
     
