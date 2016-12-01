@@ -216,8 +216,11 @@ class GameState(object):
     def getNumProjectile(self):
         return len(self.projectile_list)
 
-    def getMissileList(self):
-        return self.missile_list
+    def getLastMissile(self):
+        if len(self.missile_list) > 0:
+            return self.missile_list[-1]
+        else:
+            return None
     
     def generateSuccessor(self, agentIndex, action):
         nextAgentIndex = self.getNextAgentIndex()
