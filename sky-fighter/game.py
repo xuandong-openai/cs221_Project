@@ -139,8 +139,8 @@ class GameState(object):
     
     def getLegalActions(self, agentIndex):
         res = [Directions.STOP]
-        if agentIndex == 0:
-            res.append(Directions.SHOOT)
+        # if agentIndex == 0:
+        #     res.append(Directions.SHOOT)
         flight = self.getFlight(agentIndex)
         currentPosition = (flight.x, flight.y)
         flightHeight = flight.height
@@ -149,9 +149,9 @@ class GameState(object):
             res.append(Directions.LEFT)
         if currentPosition[0] < SCREEN_WIDTH - flightWidth:
             res.append(Directions.RIGHT)
-        if currentPosition[1] > 0:
+        if currentPosition[1] > 0 and agentIndex == 0:
             res.append(Directions.UP)
-        if currentPosition[1] < SCREEN_HEIGHT - flightHeight:
+        if currentPosition[1] < SCREEN_HEIGHT - flightHeight and agentIndex == 0:
             res.append(Directions.DOWN)
         return res
     

@@ -153,7 +153,10 @@ class ExpectimaxAgent(Agent):
             if state.isWin() or state.isLose():
                 return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
-                return self.evaluationFunction(state), Directions.STOP
+                if index == 0:
+                    return self.evaluationFunction(state), Directions.STOP
+                else:
+                    return state.getScore(), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
             nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth

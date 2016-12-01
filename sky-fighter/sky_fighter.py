@@ -71,15 +71,7 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.x += self.speed_x
             self.rect.y += self.speed_y
         else:
-            if action == Directions.UP:
-                if self.rect.top <= 0:
-                    self.rect.top = 0
-                else:
-                    self.rect.top -= self.speed_y
-            elif action == Directions.DOWN:
-                if self.rect.top >= SCREEN_HEIGHT - self.rect.height:
-                    self.rect.top = SCREEN_HEIGHT - self.rect.height
-                else:
+            if action == Directions.DOWN:
                     self.rect.top += self.speed_y
             elif action == Directions.LEFT:
                 if self.rect.left <= 0:
@@ -268,21 +260,30 @@ class Game(object):
     
     def run_game(self):
         # if self.terminate_count_down != 0:
-        state = GameState(game=self, currentAgent=0)
-        direction = None
         if self.aiPlayer_normalEnemy:
+            state = GameState(game=self, currentAgent=0)
             direction = self.agent.getAction(state)
+            self.player.update(direction)
+            if direction == Directions.SHOOT:
+                self.shoot()
+            self.enemy_list.update()
         elif self.aiPlayer_aiEnemy:
+            i = 1
+            for enemy in self.enemy_list:
+                state = GameState(game=self, currentAgent=i)
+                enemy.update(self.agent.getAction(state))  # Need enemy update function to update according to action
+                enemy.update(Directions.DOWN)
+                i += 1
+            playerState = GameState(game=self, currentAgent=0)
+            self.player.update(self.agent.getAction(playerState))
+            
             print "Running both sides AI"
         elif self.humanPlayer_aiEnemy:
             print "Human fighting AI enemy"
         else:
-            direction = Directions.STOP
-        
-        self.player.update(direction)
-        if direction == Directions.SHOOT:
-            self.shoot()
-        self.enemy_list.update()
+            self.player.update(Directions.STOP)
+            self.enemy_list.update()
+
         self.missile_list.update()
         self.projectile_list.update()
         
