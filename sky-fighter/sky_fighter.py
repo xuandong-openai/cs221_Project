@@ -227,6 +227,7 @@ class Game(object):
         self.level2EnemyFreq = 15
         # self.agent = agent.MinimaxAgent()
         self.agent = agent.AlphaBetaAgent()
+        # self.agent = agent.ExpectimaxAgent()
     
     def scroll_menu_up(self):
         if self.menu_choice > 0:

@@ -76,7 +76,6 @@ class MinimaxAgent(Agent):
             return chosenValue[0], action
         
         value, action = recurse(gameState, self.index, self.depth)
-        print value, action, gameState.getLegalActions(0), gameState.isLose()
         return action
 
 
@@ -111,5 +110,31 @@ class AlphaBetaAgent(Agent):
             return chosenValue[0], action
 
         value, action = recurse(gameState, self.index, self.depth, -INF, INF)
-        print 'value: %s, action: %s, getScore returns: %s, isLose returns: %s, isWin returns: %s' % (value, action, gameState.getScore(), gameState.isLose(), gameState.isWin())
         return action
+
+
+class ExpectimaxAgent(Agent):
+    def getAction(self, gameState):
+        def recurse(state, index, depth):
+            # check if it's the terminal state
+            if state.isWin() or state.isLose() or len(state.getLegalActions(index)) == 0 or depth == 0:
+                return self.evaluationFunction(state), Directions.STOP
+
+            nextIndex = 0 if index == state.getNumAgents() - 1 else index + 1
+            nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
+            # compute the recursion
+            values = []
+            choices = []
+            legalActions = state.getLegalActions(index)
+            for legalAction in legalActions:
+                value = recurse(state.generateSuccessor(index, legalAction), nextIndex, nextDepth)[0]
+                choices.append((value, legalAction))
+                values.append(value)
+            maxValue = max(choices)[0]
+            newChoices = [choice for choice in choices if choice[0] == maxValue]
+            mean = sum(values) / len(values)
+            return (mean, random.choice(legalActions)) if index != 0 else (maxValue, random.choice(newChoices)[1])
+
+        value, action = recurse(gameState, self.index, self.depth)
+        return action
+        
