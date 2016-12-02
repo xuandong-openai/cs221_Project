@@ -70,7 +70,12 @@ class Item(object):
     def updateMissilePosition(self):
         self.updateProjectilePosition()
 
-    def updateFlightPosition(self, action=None):
+    def updateFlightPosition(self, action=None, playerX=None):
+        if playerX is not None:
+            if self.rect.x > playerX:
+                self.speed_x = -abs(self.speed_x)
+            else:
+                self.speed_x = abs(self.speed_x)
         if action is None:
             self.x += self.speed_x
             self.y += self.speed_y
@@ -221,10 +226,10 @@ class GameState(object):
             return 1
 
     def getNumAgents(self):
-        if self.enemyIsAgent:
-            return len(self.enemy_list) + 1
-        else:
-            return 1
+        # if self.enemyIsAgent:
+        #     return len(self.enemy_list) + 1
+        # else:
+        return 1
 
     def getNumMissisle(self):
         return len(self.missile_list)
@@ -252,10 +257,10 @@ class GameState(object):
         for missile in self.missile_list:
             missile.updateMissilePosition()
 
-    def updateEnemyPositions(self):
+    def updateEnemyPositions(self, playerX=None):
         if self.enemyIsAgent:
             for enemy in self.enemy_list:
-                enemy.updateFlightPosition()
+                enemy.updateFlightPosition(playerX)
 
     def generateSuccessor(self, agentIndex, action):
         nextAgentIndex = self.getNextAgentIndex()
@@ -264,8 +269,8 @@ class GameState(object):
             player = nextState.getPlayer()
             nextState.updateProjectilesPositions()
             nextState.updateMissilePositions()
-            nextState.updateEnemyPositions()
             player.updateFlightPosition(action=action)
+            nextState.updateEnemyPositions(playerX=nextState.player.x)
             if action == Directions.SHOOT:
                 nextState.score += SCORE_FIRE_MISSILE
                 missile = Item(self.player.rect, speed_y=-MISSILE_SPEED)
