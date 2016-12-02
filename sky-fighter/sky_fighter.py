@@ -89,15 +89,6 @@ class Enemy(pygame.sprite.Sprite):
         if action is None:
             self.rect.x += self.speed_x
             self.rect.y += self.speed_y
-        else:
-            if action == Directions.LEFT_DOWN:
-                self.rect.x -= self.speed_x
-                self.rect.y += self.speed_y
-            elif action == Directions.RIGHT_DOWN:
-                self.rect.x += self.speed_x
-                self.rect.y += self.speed_y
-            elif action == Directions.DOWN_DOWN:
-                self.rect.y += self.speed_y
         self.updateProjectiles()
 
     # enemy can shoot multiple missiles

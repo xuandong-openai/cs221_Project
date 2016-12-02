@@ -24,9 +24,6 @@ class Directions:
     LEFT = 'Left'
     RIGHT = 'Right'
     SHOOT = 'Shoot'
-    LEFT_DOWN = 'LEFT_DOWN'
-    RIGHT_DOWN = 'RIGHT_DOWN'
-    DOWN_DOWN = 'DOWN_DOWN'
 
 
 class Item(object):
@@ -102,14 +99,6 @@ class Item(object):
                     self.x = SCREEN_WIDTH - self.width
                 else:
                     self.x += self.speed_x
-            elif action == Directions.LEFT_DOWN:
-                self.x -= self.speed_x
-                self.y += self.speed_y
-            elif action == Directions.RIGHT_DOWN:
-                self.x += self.speed_x
-                self.y += self.speed_y
-            elif action == Directions.DOWN_DOWN:
-                self.y += self.speed_y
 
 
 class GameState(object):
@@ -117,7 +106,7 @@ class GameState(object):
         self.enemy_list = []
         self.missile_list = []
         self.projectile_list = []
-        self.enemyIsAgent = enemyIsAgent
+        self.enemyIsAI = enemyIsAgent
         state = None
         if game is not None:
             state = game
@@ -169,11 +158,6 @@ class GameState(object):
                 legalActions.append(Directions.UP)
             if flight.y < SCREEN_HEIGHT - flight.height:
                 legalActions.append(Directions.DOWN)
-        # no need to check enemy's position because it can fly out of screen
-        else:
-            legalActions.append(Directions.LEFT_DOWN)
-            legalActions.append(Directions.RIGHT_DOWN)
-            legalActions.append(Directions.DOWN_DOWN)
         return legalActions
 
     def getScore(self):
@@ -257,20 +241,25 @@ class GameState(object):
         for missile in self.missile_list:
             missile.updateMissilePosition()
 
-    def updateEnemyPositions(self, playerX=None):
-        if self.enemyIsAgent:
-            for enemy in self.enemy_list:
-                enemy.updateFlightPosition(playerX)
+    def updateEnemyPositions(self):
+        for enemy in self.enemy_list:
+            if self.enemyIsAI:
+                enemy.updateFlightPosition(playerX=self.getPlayer().x)
+            else:
+                enemy.updateFlightPosition()
+
+    def updatePlayerPosition(self, action=None):
+        self.getPlayer().updateFlightPosition(action=action)
 
     def generateSuccessor(self, agentIndex, action):
         nextAgentIndex = self.getNextAgentIndex()
         nextState = GameState(previousState=self, currentAgent=nextAgentIndex)
         if agentIndex == 0:
-            player = nextState.getPlayer()
+            # update each object's position
             nextState.updateProjectilesPositions()
             nextState.updateMissilePositions()
-            player.updateFlightPosition(action=action)
-            nextState.updateEnemyPositions(playerX=nextState.player.x)
+            nextState.updatePlayerPosition(action=action)
+            nextState.updateEnemyPositions()
             if action == Directions.SHOOT:
                 nextState.score += SCORE_FIRE_MISSILE
                 missile = Item(self.player.rect, speed_y=-MISSILE_SPEED)

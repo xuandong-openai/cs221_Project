@@ -82,7 +82,8 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
     else:
         horizontalScore = sum(horizontalDist) / 4
 
-    totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore, missileScore]
+    # totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore, missileScore]
+    totalScore = [gameScore, threatDistScore, distToCenterScore, horizontalScore]
     # totalScore = [gameScore]
     # print totalScore
     return sum(totalScore)
@@ -105,7 +106,7 @@ class MinimaxAgent(Agent):
                 return self.evaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
-            nextDepth = depth - 1 if nextIndex == (self.index - 1) % state.getNumAgents() else depth
+            nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
 
             legalActions = state.getLegalActions(index)
             choices = []
@@ -128,19 +129,13 @@ class AlphaBetaAgent(Agent):
         def recurse(state, index, depth, lowerBound, upperBound):
             # check if it's the terminal state
             if state.isWin() or state.isLose():
-                if index == 0:
-                    return state.getScore(), Directions.STOP
-                else:
-                    return state.getScore(), Directions.STOP
+                return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
-                if index == 0:
-                    # print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
-                    if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
-                        return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
-                    else:
-                        return self.evaluationFunction(state), Directions.STOP
+                # print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
+                if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
+                    return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
                 else:
-                    return self.evaluationFunction(state), Directions.DOWN_DOWN
+                    return self.evaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
             nextDepth = depth - 1 if nextIndex == (self.index - 1) % state.getNumAgents() else depth
@@ -148,8 +143,7 @@ class AlphaBetaAgent(Agent):
             legalActions = state.getLegalActions(index)
             choices = []
             for legalAction in legalActions:
-                value, _ = recurse(state.generateSuccessor(index, legalAction), nextIndex, nextDepth, lowerBound,
-                                   upperBound)
+                value, _ = recurse(state.generateSuccessor(index, legalAction), nextIndex, nextDepth, lowerBound, upperBound)
                 choices.append((value, legalAction))
                 if index == 0:
                     lowerBound = max(value, lowerBound)
@@ -174,22 +168,16 @@ class ExpectimaxAgent(Agent):
         def recurse(state, index, depth):
             # check if it's the terminal state
             if state.isWin() or state.isLose():
-                if index == 0:
-                    return state.getScore(), Directions.STOP
-                else:
-                    return state.getScore(), Directions.DOWN_DOWN
+                return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
-                if index == 0:
-                    # print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
-                    if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
-                        return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
-                    else:
-                        return self.evaluationFunction(state), Directions.STOP
+                # print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
+                if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
+                    return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
                 else:
-                    return self.evaluationFunction(state), Directions.DOWN_DOWN
+                    return self.evaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
-            nextDepth = depth - 1 if nextIndex == (self.index - 1) % state.getNumAgents() else depth
+            nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
             # compute the recursion
             values = []
             choices = []
