@@ -89,7 +89,7 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
 
 
 class Agent:
-    def __init__(self, depth=0):
+    def __init__(self, depth=1):
         self.index = 0
         self.evaluationFunction = scoreEvaluationFunction
         self.depth = depth
@@ -105,7 +105,7 @@ class MinimaxAgent(Agent):
                 return self.evaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
-            nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
+            nextDepth = depth - 1 if nextIndex == (self.index - 1) % state.getNumAgents() else depth
 
             legalActions = state.getLegalActions(index)
             choices = []
@@ -128,12 +128,22 @@ class AlphaBetaAgent(Agent):
         def recurse(state, index, depth, lowerBound, upperBound):
             # check if it's the terminal state
             if state.isWin() or state.isLose():
-                return state.getScore(), Directions.STOP
+                if index == 0:
+                    return state.getScore(), Directions.STOP
+                else:
+                    return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
-                return self.evaluationFunction(state), Directions.STOP
+                if index == 0:
+                    # print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
+                    if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
+                        return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
+                    else:
+                        return self.evaluationFunction(state), Directions.STOP
+                else:
+                    return self.evaluationFunction(state), Directions.DOWN_DOWN
 
             nextIndex = (index + 1) % state.getNumAgents()
-            nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
+            nextDepth = depth - 1 if nextIndex == (self.index - 1) % state.getNumAgents() else depth
 
             legalActions = state.getLegalActions(index)
             choices = []
@@ -155,6 +165,7 @@ class AlphaBetaAgent(Agent):
             return chosenValue[0], action
 
         value, action = recurse(gameState, self.index, self.depth, -INF, INF)
+        print value, action, self.index
         return action
 
 
@@ -178,7 +189,7 @@ class ExpectimaxAgent(Agent):
                     return self.evaluationFunction(state), Directions.DOWN_DOWN
 
             nextIndex = (index + 1) % state.getNumAgents()
-            nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
+            nextDepth = depth - 1 if nextIndex == (self.index - 1) % state.getNumAgents() else depth
             # compute the recursion
             values = []
             choices = []
@@ -194,7 +205,7 @@ class ExpectimaxAgent(Agent):
             return (mean, random.choice(legalActions)) if index != 0 else (maxValue, random.choice(newChoices)[1])
 
         value, action = recurse(gameState, self.index, self.depth)
-        print value, action
+        print value, action, self.index
         # if gameState.getLastMissile() is not None:
         # 	print gameState.getPlayerPosition(), (gameState.getLastMissile().rect.x, gameState.getLastMissile().rect.y)
         return action

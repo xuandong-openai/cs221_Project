@@ -226,8 +226,8 @@ class Game(object):
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
         # self.agent = agent.MinimaxAgent()
-        # self.agent = agent.AlphaBetaAgent()
-        self.agent = agent.ExpectimaxAgent()
+        self.agent = agent.AlphaBetaAgent()
+        # self.agent = agent.ExpectimaxAgent()
     
     def scroll_menu_up(self):
         self.menu_choice = (self.menu_choice - 1) % len(self.menu_text)
@@ -276,6 +276,7 @@ class Game(object):
     def run_game(self):
         # if self.terminate_count_down != 0:
         if self.aiPlayer_normalEnemy:
+            self.agent = agent.ExpectimaxAgent()
             state = GameState(game=self, currentAgent=0)
             direction = self.agent.getAction(state)
             self.player.update(direction)
@@ -283,12 +284,15 @@ class Game(object):
                 self.shoot()
             self.enemy_list.update()
         elif self.aiPlayer_aiEnemy:
+            self.agent = agent.AlphaBetaAgent()
             playerState = GameState(game=self, currentAgent=0)
+            self.agent.index = 0
             direction = self.agent.getAction(playerState)
             self.player.update(direction)
             i = 1
             for enemy in self.enemy_list:
                 state = GameState(game=self, currentAgent=i, enemyIsAgent=True)
+                self.agent.index = i
                 direction = self.agent.getAction(state)
                 enemy.update(direction)  # Need enemy update function to update according to action
                 i += 1
@@ -308,8 +312,9 @@ class Game(object):
         
         # clear hit enemies
         for enemy in self.enemy_list:
-            # hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True)
             hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True, pygame.sprite.collide_mask)
+            # hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True)
+            # hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True, checkCollide)
             if len(hit_list) > 0:
                 self.explosion.add((enemy.rect.x + 20, enemy.rect.y + 20))
                 self.enemy_list.remove(enemy)
