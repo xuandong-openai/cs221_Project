@@ -12,6 +12,8 @@ images = None
 sounds = None
 state = None
 
+collideFunction = checkCollide
+# collideFunction = pygame.sprite.collide_mask
 
 class Explosion(object):
     def __init__(self):
@@ -21,11 +23,11 @@ class Explosion(object):
                        images["explosion07"], images["explosion08"], images["explosion09"],
                        images["explosion10"], images["explosion11"], images["explosion12"],
                        images["explosion13"], images["explosion14"], images["explosion15"])
-    
+
     def add(self, pos):
         self.explosion_list.append([pos, 0])  # the second argument is for the frame number;
         sounds["explosion"].play()
-    
+
     def draw(self, screen):
         if len(self.explosion_list) > 0:
             for item in self.explosion_list:
@@ -79,16 +81,15 @@ class Enemy(pygame.sprite.Sprite):
         else:
             return ceil(xDiff / timeToCatchYDiff)
 
-    def update(self, action=None, playerRect=None):
+    def update(self, playerRect=None):
         if playerRect is not None:
             self.playerRect = playerRect
             if self.rect.x > self.playerRect.x:
                 self.speed_x = -abs(self.speed_x)
             else:
                 self.speed_x = abs(self.speed_x)
-        if action is None:
-            self.rect.x += self.speed_x
-            self.rect.y += self.speed_y
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
         self.updateProjectiles()
 
     # enemy can shoot multiple missiles
@@ -96,7 +97,7 @@ class Enemy(pygame.sprite.Sprite):
         if self.tick == 0:
             projectiles = [None] * self.sprayNum
             for i in range(self.sprayNum):
-                projectiles[i] = Projectile(self.rect.center, self.projectile_image)
+                projectiles[i] = Projectile(self.rect.center)
             for i in range(self.sprayNum):
                 if i == 0:
                     projectiles[i].speed_x = self.speed_x - self.sprayDiff
@@ -111,26 +112,25 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class Missile(pygame.sprite.Sprite):
-    def __init__(self, pos, img, speed_x=0, speed_y=0):
+    def __init__(self, pos, speed_x=0, speed_y=0):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("files/missile.png").convert_alpha()
         images["missile"] = pygame.transform.scale(self.image, (MISSILE_WIDTH, MISSILE_HEIGHT))
-        # self.image = img
         self.rect = self.image.get_rect()
         self.rect.center = pos
         self.speed_x = speed_x
         self.speed_y = speed_y
         self.rect.width = MISSILE_WIDTH
         self.rect.height = MISSILE_HEIGHT
-    
+
     def update(self):
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
 
 
 class Projectile(Missile):
-    def __init__(self, pos, img):
-        Missile.__init__(self, pos, img)
+    def __init__(self, pos):
+        Missile.__init__(self, pos)
         self.image = pygame.image.load("files/projectile.png").convert()
         self.image.set_colorkey((0, 0, 0))
         self.image = pygame.transform.scale(self.image, (PROJECTILE_SIZE, PROJECTILE_SIZE))
@@ -150,11 +150,11 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottomright = [SCREEN_WIDTH / 2 - PLAYER_SIZE / 2, SCREEN_HEIGHT]  # born at the bottom of screen
         self.mask = pygame.mask.from_surface(self.image)
         self.speed = PLAYER_SPEED
-    
+
     def update(self, direction):
-        # self.rect.center = pygame.mouse.get_pos()
         # using keyboard to move
         key_pressed = pygame.key.get_pressed()
+
         # update direction according to key_pressed
         if key_pressed is not None:
             if key_pressed[K_UP]:
@@ -165,7 +165,7 @@ class Player(pygame.sprite.Sprite):
                 direction = Directions.LEFT
             elif key_pressed[K_RIGHT]:
                 direction = Directions.RIGHT
-        
+
         if direction == Directions.UP:
             if self.rect.top <= 0:
                 self.rect.top = 0
@@ -202,7 +202,7 @@ class Game(object):
     menu_choice = 0
     score_text = None
     level_text = None
-    
+
     def __init__(self):
         self.player = Player()
         self.player_list = pygame.sprite.Group()
@@ -235,10 +235,8 @@ class Game(object):
         self.level2Score = 1000
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
-        # self.agent = agent.MinimaxAgent()
-        self.agent = agent.AlphaBetaAgent()
-        # self.agent = agent.ExpectimaxAgent()
-    
+        self.agent = agent.Agent()
+
     def scroll_menu_up(self):
         self.menu_choice = (self.menu_choice - 1) % len(self.menu_text)
 
@@ -283,48 +281,30 @@ class Game(object):
             elif missile.rect.y < - MISSILE_HEIGHT or missile.rect.y > SCREEN_HEIGHT:
                 self.missile_list.remove(missile)
 
-    def run_game(self):
-        # if self.terminate_count_down != 0:
+    def updatePlayer(self):
+        self.agent = agent.ExpectimaxAgent()
         if self.aiPlayer_normalEnemy:
-            self.agent = agent.ExpectimaxAgent()
-            state = GameState(game=self, currentAgent=0)
+            state = GameState(game=self, currentAgent=0, enemyIsAgent=False)
             direction = self.agent.getAction(state)
-            self.player.update(direction)
-            if direction == Directions.SHOOT:
-                self.shoot()
-            self.enemy_list.update()
         elif self.aiPlayer_aiEnemy:
-            self.agent = agent.AlphaBetaAgent()
-            playerState = GameState(game=self, currentAgent=0)
-            self.agent.index = 0
-            direction = self.agent.getAction(playerState)
-            self.player.update(direction)
-            # i = 1
-            for enemy in self.enemy_list:
-                # state = GameState(game=self, currentAgent=i, enemyIsAgent=True)
-                # self.agent.index = i
-                # direction = self.agent.getAction(state)
-                # i += 1
-                enemy.update(playerRect=self.player.rect)  # Need enemy update function to update according to action
-        elif self.humanPlayer_aiEnemy:
-            print "Human fighting AI enemy"
+            state = GameState(game=self, currentAgent=0, enemyIsAgent=True)
+            direction = self.agent.getAction(state)
         else:
-            self.player.update(Directions.STOP)
-            self.enemy_list.update()
+            direction = Directions.STOP
+        self.player.update(direction)
+        if direction == Directions.SHOOT:
+            self.shoot()
 
-        self.missile_list.update()
-        self.projectile_list.update()
-        
-        # clear out of bound objects (missile, project, enemy)
-        self.clear_out_of_bound_missile()
-        self.clear_out_of_bound_projectile()
-        self.clear_out_of_bound_enemy()
-        
-        # clear hit enemies
+    def updateEnemy(self):
         for enemy in self.enemy_list:
-            # hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True, pygame.sprite.collide_mask)
-            # hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True)
-            hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True, checkCollide)
+            if self.aiPlayer_aiEnemy or self.humanPlayer_aiEnemy:
+                enemy.update(playerRect=self.player.rect)
+            else:
+                enemy.update()
+
+    def checkAndClearHittedEnemy(self):
+        for enemy in self.enemy_list:
+            hit_list = pygame.sprite.spritecollide(enemy, self.missile_list, True, collideFunction)
             if len(hit_list) > 0:
                 self.explosion.add((enemy.rect.x + 20, enemy.rect.y + 20))
                 self.enemy_list.remove(enemy)
@@ -339,43 +319,61 @@ class Game(object):
                         self.level += 1
                         self.tick_delay = self.level2EnemyFreq
                         self.level_text = self.font.render("Level: " + str(self.level), True, (255, 255, 255))
-        
-        # hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False, pygame.sprite.collide_mask)
-        # hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False)
-        hit_list1 = pygame.sprite.spritecollide(self.player, self.enemy_list, False, checkCollide)
-        if len(hit_list1) > 0 and not self.terminate:
+
+    def checkPlayerAndEnemyCollide(self):
+        hit_list = pygame.sprite.spritecollide(self.player, self.enemy_list, False, collideFunction)
+        if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
             sounds["plane"].stop()
-            for enemy in hit_list1:
+            for enemy in hit_list:
                 self.explosion.add(enemy.rect.topleft)
                 self.enemy_list.remove(enemy)
-        
-        # hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False, pygame.sprite.collide_mask)
-        # hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False)
-        hit_list2 = pygame.sprite.spritecollide(self.player, self.projectile_list, False, checkCollide)
-        if len(hit_list2) > 0 and not self.terminate:
+
+    def checkPlayerAndProjectileCollide(self):
+        hit_list = pygame.sprite.spritecollide(self.player, self.projectile_list, False, collideFunction)
+        if len(hit_list) > 0 and not self.terminate:
             self.terminate = True
             self.explosion.add(self.player.rect.topleft)
             sounds["plane"].stop()
-            for projectile in hit_list2:
+            for projectile in hit_list:
                 self.projectile_list.remove(projectile)
-        
+
+    def createNewEnemy(self):
         if self.tick == 0:
-            enemy = Enemy(random.choice((images["enemy1"], images["enemy2"], images["enemy3"])), self.projectile_list,
-                          self.tick_delay, self.player.rect)
-            enemy.projectile_image = images["projectile"]
-            if len(self.enemy_list) <= 1:
+            # when tick is 0 and existing enemy number is less than a fixed number, we create a new enemy
+            if len(self.enemy_list) <= ENEMY_NUM_LIMITS:
+                enemy = Enemy(random.choice((images["enemy1"], images["enemy2"], images["enemy3"])), self.projectile_list,
+                              self.tick_delay, self.player.rect)
+                enemy.projectile_image = images["projectile"]
                 self.enemy_list.add(enemy)
             self.tick = self.tick_delay
         else:
             self.tick -= 1
-        
-        if self.texture_increment == 0:
-            self.texture_increment = -SCREEN_HEIGHT
-        else:
-            self.texture_increment += 1
-        
+
+    def run_game(self):
+        self.updatePlayer()
+        self.updateEnemy()
+        self.missile_list.update()
+        self.projectile_list.update()
+
+        # clear out of bound objects (missile, project, enemy)
+        self.clear_out_of_bound_missile()
+        self.clear_out_of_bound_projectile()
+        self.clear_out_of_bound_enemy()
+
+        # check player collide with enemy or project
+        self.checkAndClearHittedEnemy()
+        self.checkPlayerAndEnemyCollide()
+        self.checkPlayerAndProjectileCollide()
+
+        self.createNewEnemy()
+
+        # if self.texture_increment == 0:
+        #     self.texture_increment = -SCREEN_HEIGHT
+        # else:
+        #     self.texture_increment += 1
+
         if not self.terminate:
             self.score += SCORE_STAY_ONE_FRAME
         else:
@@ -388,11 +386,10 @@ class Game(object):
             #     self.terminate_count_down -= 1
 
         self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
-    
+
     def display_frame(self, screen):
         if self.running:
             screen.blit(images["background"], (0, 0))
-            
             self.missile_list.draw(screen)
             self.projectile_list.draw(screen)
             self.enemy_list.draw(screen)
@@ -418,23 +415,23 @@ class Game(object):
                 screen.blit(text, (135, increment))
                 increment += 50
             pygame.draw.rect(screen, (0, 0, 255), [125, 90 + self.menu_choice * 50, 160, 45], 3)
-    
+
     def shoot(self):
-        missile = Missile(self.player.rect.center, images["missile"], speed_y=-MISSILE_SPEED)
+        missile = Missile(self.player.rect.center, speed_y=-MISSILE_SPEED)
         self.missile_list.add(missile)
         self.score += SCORE_FIRE_MISSILE
 
 
 def main():
     pygame.init()
-    
+
     # Set the width and height of the screen [width, height]
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Sky Fighter")
-    
+
     # -------------make the mouse cursor invisible-------------------
     pygame.mouse.set_visible(False)
-    
+
     # -----------------------------------------
     done = False
     # Loop until the user clicks the close button.
@@ -456,11 +453,11 @@ def main():
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
                 done = True  # Flag that we are done so we exit this loop
-            
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:  # using spacebar to shoot
                     game.shoot()
-                
+
                 elif event.key == pygame.K_RETURN:
                     if not game.running:
                         # ------The user's menu selection----------------
@@ -469,19 +466,19 @@ def main():
                             game.aiPlayer_aiEnemy = True if game.menu_choice == 2 else False
                             game.humanPlayer_aiEnemy = True if game.menu_choice == 3 else False
                             game.start_game()
-                            
+
                         elif game.menu_choice == 4:
                             game.display_help_screen = True
                         elif game.menu_choice == 5:
                             game.display_credits_screen = True
                         elif game.menu_choice == 6:
                             done = True
-                
+
                 elif event.key == pygame.K_UP:
                     game.scroll_menu_up()
                 elif event.key == pygame.K_DOWN:
                     game.scroll_menu_down()
-                
+
                 elif event.key == pygame.K_ESCAPE:
                     if game.running:
                         game.running = False
@@ -492,7 +489,7 @@ def main():
                         game.aiPlayer_aiEnemy = False
                         game.humanPlayer_aiEnemy = False
                         game.aiPlayer_normalEnemy = False
-        
+
         # --- Game logic should go here
         if game.running:
             game.run_game()
@@ -507,7 +504,7 @@ def main():
 
         # --- Limit to 30 frames per second
         clock.tick(GAME_FPS)
-    
+
     # Close the window and quit.
     # If you forget this line, the program will 'hang'
     # on exit if running from IDLE.
