@@ -82,7 +82,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.speed_x = abs(self.speed_x)
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
-        # self.updateProjectiles()
+        self.updateProjectiles()
 
     # enemy can shoot multiple missiles
     def updateProjectiles(self):
@@ -229,6 +229,8 @@ class Game(object):
         self.level2EnemyFreq = 15
         self.agent = agent.Agent()
         self.learner = TDLearner()
+        self.missileShot = 0
+        self.enemyHit = 0
 
     def scroll_menu_up(self):
         self.menu_choice = (self.menu_choice - 1) % len(self.menu_text)
@@ -303,6 +305,7 @@ class Game(object):
                 self.explosion.add((enemy.rect.x + 20, enemy.rect.y + 20))
                 self.enemy_list.remove(enemy)
                 self.score += SCORE_HIT_ENEMY
+                self.enemyHit += 1
                 if self.level == 1:
                     if self.score == self.level1Score:
                         self.level += 1
@@ -376,7 +379,8 @@ class Game(object):
         if not self.terminate:
             self.score += SCORE_STAY_ONE_FRAME
         else:
-            print "your score is: %d" % self.score
+            accuracy = 1.0 * self.enemyHit / self.missileShot if self.missileShot > 0 else 0
+            print "Your score: %d, Accuracy: %.2f" % (self.score, accuracy)            
             # self.score = SCORE_LOSE
             self.running = False
             # if self.terminate_count_down == 0:
@@ -421,6 +425,7 @@ class Game(object):
         missile = Missile(self.player.rect.center, speed_y=-MISSILE_SPEED)
         self.missile_list.add(missile)
         self.score += SCORE_FIRE_MISSILE
+        self.missileShot += 1
 
 
 def main():
