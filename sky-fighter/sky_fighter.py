@@ -7,13 +7,14 @@ from fileLoader import *
 from pygame.locals import *
 from agent import Directions
 from math import ceil
+from learning import TDLearner
 
 images = None
 sounds = None
 state = None
 
-collideFunction = checkCollide
-# collideFunction = pygame.sprite.collide_mask
+# collideFunction = checkCollide
+collideFunction = pygame.sprite.collide_mask
 
 class Explosion(object):
     def __init__(self):
@@ -43,43 +44,34 @@ class Enemy(pygame.sprite.Sprite):
     tick = shootFreezetime  # time before enemy shoots missiles
     projectile_image = None
 
-    def __init__(self, img, projectile_list, tick_delay, playerRect):
+    def __init__(self, img, projectile_list, tick_delay, playerRect=None, enemyIsAI=False):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.topleft = (random.randint(0, SCREEN_WIDTH), -ENEMY_SIZE)
-        self.playerRect = playerRect
-        # if self.rect.x < 105:
-        #     self.speed_x = random.randint(0, 5)
-        # elif self.rect.x < 210:
-        #     self.speed_x = random.randint(-1, 5)
-        # elif self.rect.x < 315:
-        #     self.speed_x = random.randint(-3, 3)
-        # elif self.rect.x < 420:
-        #     self.speed_x = random.randint(-5, -1)
-        # else:
-        #     self.speed_x = random.randint(-5, 0)
-        self.speed_y = random.randint(2, 5)
-        # self.speed_x = self.calculateSpeedx()
-        self.splitSpeed = SCREEN_WIDTH / 5
-        self.speed_x = (self.playerRect.x - self.rect.x) / self.splitSpeed
-        if self.speed_x == 0:
-            self.speed_x = 1
-
         self.projectile_list = projectile_list
         self.tick_delay = tick_delay
         self.sprayNum = 3  # number of spray projectiles
         self.sprayDiff = 4
-
-    def calculateSpeedx(self):
-        yDiff = (self.playerRect.y + PLAYER_SIZE) - (self.rect.y - ENEMY_SIZE)
-        timeToCatchYDiff = yDiff / self.speed_y
-        xDiff = (self.playerRect.x + PLAYER_SIZE) - (self.rect.x - ENEMY_SIZE)
-        if xDiff == 0:
-            return 1
+        self.speed_y = random.randint(2, 5)
+        if not enemyIsAI:
+            if self.rect.x < 105:
+                self.speed_x = random.randint(0, 5)
+            elif self.rect.x < 210:
+                self.speed_x = random.randint(-1, 5)
+            elif self.rect.x < 315:
+                self.speed_x = random.randint(-3, 3)
+            elif self.rect.x < 420:
+                self.speed_x = random.randint(-5, -1)
+            else:
+                self.speed_x = random.randint(-5, 0)
         else:
-            return ceil(xDiff / timeToCatchYDiff)
+            self.playerRect = playerRect
+            self.splitSpeed = SCREEN_WIDTH / 5
+            self.speed_x = (self.playerRect.x - self.rect.x) / self.splitSpeed
+            if self.speed_x == 0:
+                self.speed_x = 1
 
     def update(self, playerRect=None):
         if playerRect is not None:
@@ -236,6 +228,7 @@ class Game(object):
         self.level1EnemyFreq = 25
         self.level2EnemyFreq = 15
         self.agent = agent.Agent()
+        self.learner = TDLearner()
 
     def scroll_menu_up(self):
         self.menu_choice = (self.menu_choice - 1) % len(self.menu_text)
@@ -294,6 +287,7 @@ class Game(object):
         self.player.update(direction)
         if direction == Directions.SHOOT:
             self.shoot()
+        return state
 
     def updateEnemy(self):
         for enemy in self.enemy_list:
@@ -343,8 +337,12 @@ class Game(object):
         if self.tick == 0:
             # when tick is 0 and existing enemy number is less than a fixed number, we create a new enemy
             if len(self.enemy_list) <= ENEMY_NUM_LIMITS:
-                enemy = Enemy(random.choice((images["enemy1"], images["enemy2"], images["enemy3"])), self.projectile_list,
-                              self.tick_delay, self.player.rect)
+                if self.aiPlayer_aiEnemy or self.humanPlayer_aiEnemy:
+                    enemy = Enemy(random.choice((images["enemy1"], images["enemy2"], images["enemy3"])), self.projectile_list,
+                              self.tick_delay, playerRect=self.player.rect, enemyIsAI=True)
+                else:
+                    enemy = Enemy(random.choice((images["enemy1"], images["enemy2"], images["enemy3"])), self.projectile_list,
+                              self.tick_delay)
                 enemy.projectile_image = images["projectile"]
                 self.enemy_list.add(enemy)
             self.tick = self.tick_delay
@@ -352,7 +350,8 @@ class Game(object):
             self.tick -= 1
 
     def run_game(self):
-        self.updatePlayer()
+        oldScore = self.score
+        currGameState = self.updatePlayer()
         self.updateEnemy()
         self.missile_list.update()
         self.projectile_list.update()
@@ -384,7 +383,9 @@ class Game(object):
             #     self.running = False
             # else:
             #     self.terminate_count_down -= 1
-
+        nextGameState = GameState(game=self, currentAgent=0)
+        reward = self.score - oldScore
+        self.learner.updateWeight(currGameState, nextGameState, reward)
         self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
 
     def display_frame(self, screen):
@@ -493,6 +494,8 @@ def main():
         # --- Game logic should go here
         if game.running:
             game.run_game()
+        else:
+            game.learner.writeWeightToFile()
         # First, clear the screen to white. Don't put other drawing commands
         # above this, or they will be erased with this command.
         screen.fill((255, 255, 255))

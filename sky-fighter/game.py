@@ -80,22 +80,22 @@ class Item(object):
             if action == Directions.SHOOT:
                 return
             elif action == Directions.UP:
-                if self.y - self.speed_y < 0:
+                if self.y - self.speed_y <= 0:
                     self.y = 0
                 else:
                     self.y -= self.speed_y
             elif action == Directions.DOWN:
-                if self.y + self.speed_y + self.height > SCREEN_HEIGHT:
+                if self.y + self.speed_y + self.height >= SCREEN_HEIGHT:
                     self.y = SCREEN_HEIGHT - self.height
                 else:
                     self.y += self.speed_y
             elif action == Directions.LEFT:
-                if self.x - self.speed_x < 0:
+                if self.x - self.speed_x <= 0:
                     self.x = 0
                 else:
                     self.x -= self.speed_x
             elif action == Directions.RIGHT:
-                if self.x + self.speed_x + self.width > SCREEN_WIDTH:
+                if self.x + self.speed_x + self.width >= SCREEN_WIDTH:
                     self.x = SCREEN_WIDTH - self.width
                 else:
                     self.x += self.speed_x
@@ -149,7 +149,7 @@ class GameState(object):
         # need to check agent's position to make sure it stays in the screen
         if agentIndex == 0:
             legalActions.append(Directions.STOP)
-            # legalActions.append(Directions.SHOOT)
+            legalActions.append(Directions.SHOOT)
             if flight.x > 0:
                 legalActions.append(Directions.LEFT)
             if flight.x < SCREEN_WIDTH - flight.width:
@@ -224,7 +224,7 @@ class GameState(object):
     def getMissilePositions(self):
         res = []
         for missile in self.missile_list:
-            res.append((missile.rect.x, missile.rect.y))
+            res.append((missile.x, missile.y))
         return res
 
     def getLastMissile(self):
