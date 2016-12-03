@@ -215,7 +215,7 @@ class GameState(object):
         # else:
         return 1
 
-    def getNumMissisle(self):
+    def getNumMissile(self):
         return len(self.missile_list)
 
     def getNumProjectile(self):
