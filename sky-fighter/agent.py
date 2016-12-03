@@ -57,7 +57,6 @@ def getFeatureVector(currentGameState):
     enemyPos = currentGameState.getEnemyPositions()
     projPos = currentGameState.getProjPositions()
     pos = currentGameState.getPlayerPosition()
-    # weight = currentGameState.learner.getWeight()
 
     def getSquaredDistance(pos1, pos2):
         return (pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2
@@ -91,6 +90,52 @@ def getFeatureVector(currentGameState):
     features['horizontalDist'] = sum(horizontalDist)
 
     return Counter(features)
+
+
+def learningEvaluationFunction(currentGameState):
+    enemyPos = currentGameState.getEnemyPositions()
+    projPos = currentGameState.getProjPositions()
+    pos = currentGameState.getPlayerPosition()
+    weight = currentGameState.learner.getWeight()
+
+    def getSquaredDistance(pos1, pos2):
+        return (pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2
+
+    enemyPosDiff = [getSquaredDistance(pos, enemy) for enemy in enemyPos if enemy[1] < pos[1] + PLAYER_SIZE]
+    projPosDiff = [getSquaredDistance(pos, proj) for proj in projPos if proj[1] < pos[1] + PLAYER_SIZE]
+
+    features = {}
+    # calculate the number of threats in a range centered at player's position
+    features['radius'] = 256
+    features['closestEnemy'] = 0
+    for diff in enemyPosDiff:
+        if diff < (2 * features['radius']) ** 2:
+            features['closestEnemy'] += features['radius'] ** 2 / diff
+    features['closestProj'] = 0
+    for diff in projPosDiff:
+        if diff < (2 * features['radius']) ** 2:
+            features['closestProj'] += features['radius'] ** 2 / diff
+
+    # punish the score if flying too wide
+    features['xDeviation'] = abs(pos[0] - (SCREEN_WIDTH - PLAYER_SIZE) / 2) ** 2
+    features['yDeviation'] = abs(int(0.85 * SCREEN_HEIGHT) - pos[1])
+
+    # current game score
+    features['game'] = currentGameState.getScore()
+
+    # horizontal distances to enemies
+    horizontalDist = [abs(pos[0] - enemy[0]) for enemy in enemyPos if enemy[1] < pos[1] + PLAYER_SIZE]
+    if len(horizontalDist) == 0:
+        horizontalDist = [4 * SCREEN_WIDTH]
+    features['horizontalDist'] = sum(horizontalDist)
+
+    features = Counter(features)
+    totalScore = 0
+    for k in features:
+    	if k == 'radius':
+    		continue
+    	totalScore += features[k] * weight[k]
+    return totalScore
 
 
 def ultimateEvaluationFunction(currentGameState):
