@@ -82,7 +82,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.speed_x = abs(self.speed_x)
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
-        self.updateProjectiles()
+        # self.updateProjectiles()
 
     # enemy can shoot multiple missiles
     def updateProjectiles(self):
@@ -377,7 +377,7 @@ class Game(object):
             self.score += SCORE_STAY_ONE_FRAME
         else:
             print "your score is: %d" % self.score
-            self.score = SCORE_LOSE
+            # self.score = SCORE_LOSE
             self.running = False
             # if self.terminate_count_down == 0:
             #     self.running = False

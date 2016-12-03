@@ -143,6 +143,10 @@ def ultimateEvaluationFunction(currentGameState):
     projs = currentGameState.getProjectiles()
     player = currentGameState.getPlayerPosition()
     gameScore = currentGameState.getScore()
+    pos = currentGameState.getPlayerPosition()
+
+    def getManhattanDistance(pos1, pos2):
+    	return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
     enemyScore = 0
     epDiff = (PLAYER_SIZE + ENEMY_WIDTH) / 2, (PLAYER_SIZE + ENEMY_HEIGHT) / 2
@@ -158,27 +162,28 @@ def ultimateEvaluationFunction(currentGameState):
     	for t in range(threshold):
     		newePos = ePos[0] + v[0] * t, ePos[1] + v[1] * t
     		if abs(newePos[0] - player[0]) <= epDiff[0] and abs(newePos[1] - player[1]) <= epDiff[1]:
-    			enemyScore -= 200
+    			enemyScore -= 1000 / getManhattanDistance(ePos, player)
     			break
 
-    projScore = 0
-    ppDiff = (PLAYER_SIZE + PROJECTILE_SIZE) / 2, (PLAYER_SIZE + PROJECTILE_SIZE) / 2
-    for proj in projs:
-    	pPos = proj.x, proj.y
-    	if pPos[1] >= player[1]:
-    		continue
-    	v = proj.speed_x, proj.speed_y
-    	threshold = (SCREEN_HEIGHT - pPos[1]) / v[1]
-    	if v[0] != 0:
-    		thresholdX = (SCREEN_WIDTH - pPos[0]) / v[0] if v[0] > 0 else pPos[0] / -v[0]
-    		threshold = min(threshold, thresholdX)
-    	for t in range(threshold):
-    		newpPos = pPos[0] + v[0] * t, pPos[1] + v[1] * t
-    		if abs(newpPos[0] - player[0]) <= ppDiff[0] and abs(newpPos[1] - player[1]) <= ppDiff[1]:
-    			projScore -= 200
-    			break
+    # divide the screen into 4 pieces
+    W, H = SCREEN_WIDTH, SCREEN_HEIGHT
+    topleft = [(0, 0), (W / 2, 0), (0, H / 2), (W / 2, H / 2)]
+    bottomright = [(W / 2, H / 2), (W, H / 2), (W / 2, H), (W, H)]
+    center = []
+    for i in range(len(topleft)):
+    	ctr = 0.5 * (bottomright[i][0] - topleft[i][0]), 0.8 * (bottomright[i][1] - topleft[i][1])
+    	center.append(ctr)
+    enemyCenterOffset = ENEMY_WIDTH / 2, ENEMY_HEIGHT / 2
+    projCenterOffset = PROJECTILE_SIZE / 2, PROJECTILE_SIZE / 2
 
-    totalScore = [gameScore, enemyScore, projScore]
+    # punish the score if flying too wide
+    xDeviationWeight, yDeviationWeight = -1.0 / 25, -1.0 / 50
+    xDeviation = abs(pos[0] - (SCREEN_WIDTH - PLAYER_SIZE) / 2) ** 2
+    yDeviation = abs(int(0.85 * SCREEN_HEIGHT) - pos[1])
+    distToCenterScore = int(xDeviationWeight * xDeviation) + int(yDeviationWeight * yDeviation)
+
+    totalScore = [gameScore, enemyScore, distToCenterScore]
+    print totalScore
     return sum(totalScore)
 
 
@@ -190,44 +195,36 @@ def shootScoreEvaluationFunction(currentGameState):
     numMissile = len(missilePos)
     numEnemy = len(enemyPos)
 
-    def checkEMCollide(pos1, pos2):
-        # pos1 is enemy, pos2 is missile
-        if pos1[0] <= pos2[0]:
-            xCollide = pos2[0] - pos1[0] < ENEMY_WIDTH
-        else:
-            xCollide = pos1[0] - pos2[0] < MISSILE_WIDTH
-        if pos1[1] <= pos2[1]:
-            yCollide = pos2[1] - pos1[1] < ENEMY_HEIGHT
-        else:
-            yCollide = pos1[1] - pos2[1] < MISSILE_HEIGHT
-        return xCollide and yCollide
-
-    missileScore = -10000
-    offset = (PLAYER_SIZE - MISSILE_WIDTH) / 2, (PLAYER_SIZE - MISSILE_HEIGHT) / 2
-    if numMissile >= 1 or pos[1] < 0.8 * SCREEN_HEIGHT:
+    hitOffset = MISSILE_WIDTH / 2, MISSILE_HEIGHT / 2
+    if numMissile > 0 or pos[1] < 0.8 * SCREEN_HEIGHT:
     	missileScore = -10000
     else:
-    	# mx, my = pos[0] + offset[0] + MISSILE_WIDTH / 2, pos[1] + offset[1] + MISSILE_HEIGHT / 2
-    	# for enemy in enemies:
-	    # 	x, y = enemy.x + ENEMY_WIDTH / 2, enemy.y + ENEMY_HEIGHT / 2
-	    # 	if y >= my:
-	    # 		continue
-	    #     vx, vy = enemy.speed_x, enemy.speed_y
-	    #     for t in range(1, my / MISSILE_SPEED):
-	    #         newEnemyPos = x + vx * t, y + vy * t
-	    #         newMislePos = mx, my - MISSILE_SPEED * t
-	    #         checkX = abs(newEnemyPos[0] - newMislePos[0]) < (ENEMY_WIDTH + MISSILE_WIDTH) / 2
-	    #         checkY = abs(newEnemyPos[1] - newMislePos[1]) < (ENEMY_HEIGHT + MISSILE_HEIGHT) / 2
-	    #         if checkX and checkY:
-	    #             missileScore = 2000
-	    #             break
-	    rx = (ENEMY_WIDTH + MISSILE_WIDTH) / 2
-	    mx, my = pos[0] + offset[0] + MISSILE_WIDTH / 2, pos[1] + offset[1] + MISSILE_HEIGHT / 2
-	    for enemy in enemies:
+    	missileScore = -10000
+    	mx, my = pos[0] + PLAYER_SIZE / 2, pos[1] + PLAYER_SIZE / 2
+    	for enemy in enemies:
 	    	x, y = enemy.x + ENEMY_WIDTH / 2, enemy.y + ENEMY_HEIGHT / 2
-	    	if abs(x - mx) < rx and y >= 0 and y < my:
-	    		missileScore = 1000
-	    		break
+	    	if y >= my:
+	    		continue
+	        vx, vy = enemy.speed_x, enemy.speed_y
+	        for t in range(1, my / MISSILE_SPEED):
+	            newEnemyPos = x + vx * t, y + vy * t
+	            newMislePos = mx, my - MISSILE_SPEED * t
+	            checkX = abs(newEnemyPos[0] - newMislePos[0]) < (ENEMY_WIDTH + MISSILE_WIDTH) / 2 - hitOffset[0]
+	            checkY = abs(newEnemyPos[1] - newMislePos[1]) < (ENEMY_HEIGHT + MISSILE_HEIGHT) / 2 - hitOffset[1]
+	            if checkX and checkY:
+	                missileScore = 200
+	                break
+	    # missileScore = -10000
+	    # rx = (ENEMY_WIDTH + MISSILE_WIDTH) / 2
+	    # mx, my = pos[0] + offset[0] + MISSILE_WIDTH / 2, pos[1] + offset[1] + MISSILE_HEIGHT / 2
+	    # for enemy in enemies:
+	    # 	x, y = enemy.x + ENEMY_WIDTH / 2, enemy.y + ENEMY_HEIGHT / 2
+	    # 	vx, vy = enemy.speed_x, enemy.speed_y
+	    # 	checkSpeed = (x <= mx and vx >= 0) or (x > mx and vx < 0)
+	    # 	checkPosition = abs(x - mx) < rx and y < my
+	    # 	if checkSpeed and checkPosition:
+	    # 		missileScore = 1000
+	    # 		break
 
     # current game score
     gameScore = currentGameState.getScore()
@@ -236,13 +233,42 @@ def shootScoreEvaluationFunction(currentGameState):
     return sum(totalScore)
 
 
+def getShootFeatureVector(currentGameState):
+    enemyPos = currentGameState.getEnemyPositions()
+    pos = currentGameState.getPlayerPosition()
+    missilePos = currentGameState.getMissilePositions()
+    enemies = currentGameState.getEnemies()
+    numMissile = len(missilePos)
+    numEnemy = len(enemyPos)
+
+    features = {}    
+    features['heightPortion'] = 0.8
+    offset = (PLAYER_SIZE - MISSILE_WIDTH) / 2, (PLAYER_SIZE - MISSILE_HEIGHT) / 2
+    if numMissile >= 1 or pos[1] < features['heightPortion'] * SCREEN_HEIGHT:
+    	features['missileScore'] = -10000
+    else:
+	    features['missileScore'] = -10000
+	    rx = (ENEMY_WIDTH + MISSILE_WIDTH) / 2
+	    mx, my = pos[0] + offset[0] + MISSILE_WIDTH / 2, pos[1] + offset[1] + MISSILE_HEIGHT / 2
+	    for enemy in enemies:
+	    	x, y = enemy.x + ENEMY_WIDTH / 2, enemy.y + ENEMY_HEIGHT / 2
+	    	if abs(x - mx) < rx and y >= 0 and y < my:
+	    		features['missileScore'] = 1000
+	    		break
+
+    # current game score
+    features['game'] = currentGameState.getScore()
+
+    return Counter(features)
+
+
 class Agent:
-    def __init__(self, depth=1):
+    def __init__(self, depth=0):
         self.index = 0
         self.depth = depth
         self.evaluationFunction = scoreEvaluationFunction
+        # self.evaluationFunction = ultimateEvaluationFunction
         self.shootEvaluationFunction = shootScoreEvaluationFunction
-        self.ultimateEvaluationFunction = ultimateEvaluationFunction
         self.depth = int(depth)
 
 
@@ -320,7 +346,6 @@ class ExpectimaxAgent(Agent):
                 return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
                 return self.evaluationFunction(state), Directions.STOP
-                # return self.ultimateEvaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
             nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth

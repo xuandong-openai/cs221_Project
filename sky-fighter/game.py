@@ -277,6 +277,7 @@ class GameState(object):
                         nextState.missile_list.remove(missile)
             if nextState.isLose():
                 nextState.score = SCORE_LOSE
+                # pass
             else:
                 nextState.score += SCORE_STAY_ONE_FRAME
         else:
