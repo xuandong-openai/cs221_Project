@@ -5,7 +5,7 @@ import math
 from collections import Counter
 
 
-def scoreEvaluationFunction(currentGameState, currentAction=None):
+def scoreEvaluationFunction(currentGameState):
     pos = currentGameState.getPlayerPosition()
     enemies = currentGameState.getEnemies()
     enemyPos = currentGameState.getEnemyPositions()
@@ -13,7 +13,6 @@ def scoreEvaluationFunction(currentGameState, currentAction=None):
 
     def getSquaredDistance(pos1, pos2):
         return (pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2
-
 
     enemyPosDiff = [getSquaredDistance(pos, enemy) for enemy in enemyPos if enemy[1] < pos[1] + PLAYER_SIZE]
     projPosDiff = [getSquaredDistance(pos, proj) for proj in projPos if proj[1] < pos[1] + PLAYER_SIZE]
@@ -58,6 +57,7 @@ def getFeatureVector(currentGameState):
     enemyPos = currentGameState.getEnemyPositions()
     projPos = currentGameState.getProjPositions()
     pos = currentGameState.getPlayerPosition()
+    # weight = currentGameState.learner.getWeight()
 
     def getSquaredDistance(pos1, pos2):
         return (pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2
@@ -106,9 +106,11 @@ def ultimateEvaluationFunction(currentGameState):
     	if ePos[1] >= player[1]:
     		continue
     	v = enemy.speed_x, enemy.speed_y
-    	thresholdX = (SCREEN_WIDTH - ePos[0]) / v[0] if v[0] > 0 else ePos[0] / -v[0]
-    	thresholdY = (SCREEN_HEIGHT - ePos[1]) / v[1]
-    	for t in range(min(thresholdX, thresholdY)):
+    	threshold = (SCREEN_HEIGHT - ePos[1]) / v[1]
+    	if v[0] != 0:
+    		thresholdX = (SCREEN_WIDTH - ePos[0]) / v[0] if v[0] > 0 else ePos[0] / -v[0]
+    		threshold = min(threshold, thresholdX)    	
+    	for t in range(threshold):
     		newePos = ePos[0] + v[0] * t, ePos[1] + v[1] * t
     		if abs(newePos[0] - player[0]) <= epDiff[0] and abs(newePos[1] - player[1]) <= epDiff[1]:
     			enemyScore -= 200
@@ -121,9 +123,11 @@ def ultimateEvaluationFunction(currentGameState):
     	if pPos[1] >= player[1]:
     		continue
     	v = proj.speed_x, proj.speed_y
-    	thresholdX = (SCREEN_WIDTH - pPos[0]) / v[0] if v[0] > 0 else pPos[0] / -v[0]
-    	thresholdY = (SCREEN_HEIGHT - pPos[1]) / v[1]
-    	for t in range(min(thresholdX, thresholdY)):
+    	threshold = (SCREEN_HEIGHT - pPos[1]) / v[1]
+    	if v[0] != 0:
+    		thresholdX = (SCREEN_WIDTH - pPos[0]) / v[0] if v[0] > 0 else pPos[0] / -v[0]
+    		threshold = min(threshold, thresholdX)
+    	for t in range(threshold):
     		newpPos = pPos[0] + v[0] * t, pPos[1] + v[1] * t
     		if abs(newpPos[0] - player[0]) <= ppDiff[0] and abs(newpPos[1] - player[1]) <= ppDiff[1]:
     			projScore -= 200
@@ -232,11 +236,7 @@ class AlphaBetaAgent(Agent):
             if state.isWin() or state.isLose():
                 return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
-                # print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
-                if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
-                    return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
-                else:
-                    return self.evaluationFunction(state), Directions.STOP
+                return self.evaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
             nextDepth = depth - 1 if nextIndex == (self.index - 1) % state.getNumAgents() else depth
@@ -264,7 +264,6 @@ class AlphaBetaAgent(Agent):
             return chosenValue[0], action
 
         value, action = recurse(gameState, self.index, self.depth, -INF, INF)
-        print value, action, self.index
         return action
 
 
@@ -275,11 +274,7 @@ class ExpectimaxAgent(Agent):
             if state.isWin() or state.isLose():
                 return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
-                # print self.evaluationFunction(state, Directions.SHOOT), self.evaluationFunction(state)
-                if self.evaluationFunction(state, Directions.SHOOT) > self.evaluationFunction(state):
-                    return self.evaluationFunction(state, Directions.SHOOT), Directions.SHOOT
-                else:
-                    return self.evaluationFunction(state), Directions.STOP
+                return self.evaluationFunction(state), Directions.STOP
                 # return self.ultimateEvaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
@@ -298,11 +293,7 @@ class ExpectimaxAgent(Agent):
             maxValue = max(choices)[0]
             newChoices = [choice for choice in choices if choice[0] == maxValue]
             mean = sum(values) / len(values)
-            print choices
             return (mean, random.choice(legalActions)) if index != 0 else (maxValue, random.choice(newChoices)[1])
 
         value, action = recurse(gameState, self.index, self.depth)
-        print value, action, self.index
-        # if gameState.getLastMissile() is not None:
-        # 	print gameState.getPlayerPosition(), (gameState.getLastMissile().rect.x, gameState.getLastMissile().rect.y)
         return action
