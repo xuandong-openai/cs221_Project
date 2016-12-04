@@ -56,14 +56,15 @@ class Enemy(pygame.sprite.Sprite):
         self.sprayDiff = 4
         self.speed_y = random.randint(2, 5)
         if not enemyIsAI:
-            if self.rect.x < 105:
+            centerX = self.rect.x + ENEMY_SIZE / 2
+            if centerX < 0.2 * SCREEN_WIDTH:
                 self.speed_x = random.randint(0, 5)
-            elif self.rect.x < 210:
+            elif centerX < 0.4 * SCREEN_WIDTH:
                 self.speed_x = random.randint(-1, 5)
-            elif self.rect.x < 315:
+            elif centerX < 0.6 * SCREEN_WIDTH:
                 self.speed_x = random.randint(-3, 3)
-            elif self.rect.x < 420:
-                self.speed_x = random.randint(-5, -1)
+            elif centerX < 0.8 * SCREEN_WIDTH:
+                self.speed_x = random.randint(-5, 1)
             else:
                 self.speed_x = random.randint(-5, 0)
         else:
