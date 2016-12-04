@@ -277,6 +277,7 @@ class Game(object):
                 self.missile_list.remove(missile)
 
     def updatePlayer(self):
+        state = None
         self.agent = agent.ExpectimaxAgent()
         if self.aiPlayer_normalEnemy:
             state = GameState(game=self, currentAgent=0, enemyIsAgent=False)
@@ -387,9 +388,9 @@ class Game(object):
             #     self.running = False
             # else:
             #     self.terminate_count_down -= 1
-        nextGameState = GameState(game=self, currentAgent=0)
-        reward = self.score - oldScore
-        self.learner.updateWeight(currGameState, nextGameState, reward)
+        # nextGameState = GameState(game=self, currentAgent=0)
+        # reward = self.score - oldScore
+        # self.learner.updateWeight(currGameState, nextGameState, reward)
         self.score_text = self.font.render("Score: " + str(self.score), True, (255, 255, 255))
 
     def display_frame(self, screen):
