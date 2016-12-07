@@ -20,8 +20,11 @@ def scoreEvaluationFunction(currentGameState):
 
     # enemyPosDiff = [getSquaredDistance(pos, enemy) for enemy in enemyPos if enemy[1] < pos[1] + PLAYER_SIZE]
     # projPosDiff = [getSquaredDistance(pos, proj) for proj in projPos if proj[1] < pos[1] + PLAYER_SIZE]
-    enemyPosDiff = [getSquaredDistance(pos, enemy) for enemy in enemyPos]
-    projPosDiff = [getSquaredDistance(pos, proj) for proj in projPos]
+    pCenter = pos[0] + PLAYER_SIZE / 2, pos[1] + PLAYER_SIZE / 2
+    enemyPosDiff = [getSquaredDistance(pCenter, (enemy[0] + ENEMY_WIDTH / 2, enemy[1] + ENEMY_HEIGHT / 2)) for enemy in enemyPos]
+    projPosDiff = [getSquaredDistance(pCenter, (proj[0] + PROJECTILE_SIZE / 2, proj[1] + PROJECTILE_SIZE / 2)) for proj in projPos]
+
+    projHorizontalDiff = [abs(proj[0] + PROJECTILE_SIZE / 2 - pCenter[0]) for proj in projPos]
 
     # calculate the number of threats in a range centered at player's position
     closestEnemyWeight, closestProjWeight = -50, -100
@@ -30,11 +33,12 @@ def scoreEvaluationFunction(currentGameState):
     for diff in enemyPosDiff:
         if diff < (2 * radius) ** 2:
             closestEnemy += radius ** 2 / diff
+    closestEnemyScore = closestEnemyWeight * closestEnemy
+
     closestProj = 0
     for diff in projPosDiff:
         if diff < (2 * radius) ** 2:
             closestProj += radius ** 2 / diff
-    closestEnemyScore = closestEnemyWeight * closestEnemy
     closestProjScore = closestProjWeight * closestProj
 
     # punish the score if flying too wide
@@ -85,8 +89,14 @@ def scoreEvaluationFunction(currentGameState):
     distToChosenArea = getManhattanDistance(center[chosenArea], playerCenter)
     distToAreaScore = -int(0.25 * distToChosenArea)
 
+    minProjDist = 0
+    if len(projPos) == 0:
+        minProjDist = SCREEN_WIDTH
+    else:
+        minProjDist = min([abs(pos[0] - proj[0]) for proj in projPos])
+    horizontalProjScore = minProjDist
+
     totalScore = [gameScore, closestEnemyScore, closestProjScore, distToCenterScore, horizontalScore, distToAreaScore]
-    # totalScore = [gameScore, closestEnemyScore, closestProjScore, horizontalScore, distToAreaScore]
     return sum(totalScore)
 
 
@@ -189,21 +199,18 @@ def shootScoreEvaluationFunction(currentGameState):
     # missileScore = 0
     # for proj in projs:
     # 	px, py = proj.x + PROJECTILE_SIZE / 2 + proj.speed_x, proj.y + PROJECTILE_SIZE / 2 + proj.speed_y
-    # 	diff = PLAYER_SPEED + PLAYER_SIZE / 2
-    # 	if abs(playerCenter[0] - px) < diff + PROJECTILE_SIZE / 2 and abs(playerCenter[1] - py) < diff + ENEMY_HEIGHT / 2:
+    # 	if abs(playerCenter[0] - px) < (PLAYER_SIZE + PROJECTILE_SIZE) / 2 and abs(playerCenter[1] - py) < (PLAYER_SIZE + ENEMY_HEIGHT) / 2:
     # 		missileScore = -10000
     # 		break
     # for enemy in enemies:
     # 	ex, ey = enemy.x + ENEMY_HEIGHT / 2 + enemy.speed_x, enemy.y + ENEMY_WIDTH / 2 + enemy.speed_y
-    # 	diff = PLAYER_SPEED + PLAYER_SIZE / 2
-    # 	if abs(playerCenter[0] - ex) < diff + ENEMY_WIDTH / 2 and abs(playerCenter[1] - ey) < diff + ENEMY_HEIGHT / 2:
+    # 	if abs(playerCenter[0] - ex) < (PLAYER_SIZE + ENEMY_WIDTH) / 2 and abs(playerCenter[1] - ey) < (PLAYER_SIZE + ENEMY_HEIGHT) / 2:
     # 		missileScore = -10000
     # 		break
 
-    hitOffset = MISSILE_WIDTH / 2, MISSILE_HEIGHT / 2
-    # hitOffset = 0, 0
+    hitOffset = 0.5 * MISSILE_WIDTH, 0.5 * MISSILE_HEIGHT
     # if numMissile > 0 or pos[1] < 0.8 * SCREEN_HEIGHT:
-    if numMissile > 0:
+    if numMissile > 0 or pos[1] < 0.1 * SCREEN_HEIGHT:
     	missileScore = -10000
     else:
     	missileScore = -10000
@@ -268,34 +275,6 @@ class Agent:
         self.depth = int(depth)
 
 
-class MinimaxAgent(Agent):
-    def getAction(self, gameState):
-        def recurse(state, index, depth):
-            # check if it's the terminal state
-            if state.isWin() or state.isLose():
-                return state.getScore(), Directions.STOP
-            if len(state.getLegalActions(index)) == 0 or depth == 0:
-                return self.evaluationFunction(state), Directions.STOP
-
-            nextIndex = (index + 1) % state.getNumAgents()
-            nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
-
-            legalActions = state.getLegalActions(index)
-            choices = []
-            for legalAction in legalActions:
-                choices.append(
-                    (recurse(state.generateSuccessor(index, legalAction), nextIndex, nextDepth)[0], legalAction))
-                # return max value if it's agent otherwise min if it's opponent
-            chosenValue = max(choices) if index == 0 else min(choices)
-            indices = [i for i in range(len(choices)) if choices[i][0] == chosenValue[0]]
-            chosenIndex = random.choice(indices)  # Pick randomly among max
-            action = legalActions[chosenIndex]
-            return chosenValue[0], action
-
-        value, action = recurse(gameState, self.index, self.depth)
-        return action
-
-
 class AlphaBetaAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth, lowerBound, upperBound):
@@ -337,11 +316,11 @@ class ExpectimaxAgent(Agent):
     def getAction(self, gameState):
         def recurse(state, index, depth):
             # check if it's the terminal state
-            choices = [Directions.UP, Directions.DOWN, Directions.LEFT, Directions.RIGHT]
+            # choices = [Directions.UP, Directions.DOWN, Directions.LEFT, Directions.RIGHT]
             if state.isWin() or state.isLose():
-                return state.getScore(), random.choice(choices)
+                return state.getScore(), Directions.STOP
             if len(state.getLegalActions(index)) == 0 or depth == 0:
-                return self.evaluationFunction(state), random.choice(choices)
+                return self.evaluationFunction(state), Directions.STOP
 
             nextIndex = (index + 1) % state.getNumAgents()
             nextDepth = depth - 1 if nextIndex == state.getNumAgents() - 1 else depth
@@ -359,6 +338,8 @@ class ExpectimaxAgent(Agent):
             maxValue = max(choices)[0]
             newChoices = [choice for choice in choices if choice[0] == maxValue]
             mean = sum(values) / len(values)
+            # if Directions.LEFT in newChoices and Directions.RIGHT in newChoices and Directions.DOWN in choices:
+            #     newChoices.remove(Directions.DOWN)
             return (mean, random.choice(legalActions)) if index != 0 else (maxValue, random.choice(newChoices)[1])
 
         value, action = recurse(gameState, self.index, self.depth)

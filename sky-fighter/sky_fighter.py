@@ -140,7 +140,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (PLAYER_SIZE, PLAYER_SIZE))
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
-        self.rect.bottomright = [SCREEN_WIDTH / 2 - PLAYER_SIZE / 2, SCREEN_HEIGHT]  # born at the bottom of screen
+        self.rect.bottomright = [SCREEN_WIDTH / 2 + PLAYER_SIZE / 2, SCREEN_HEIGHT / 2]  # born at the bottom of screen
         self.mask = pygame.mask.from_surface(self.image)
         self.speed = PLAYER_SPEED
 
@@ -241,6 +241,7 @@ class Game(object):
 
     def start_game(self):
         self.running = True
+        self.player.rect.bottomright = [SCREEN_WIDTH / 2 + PLAYER_SIZE / 2, SCREEN_HEIGHT / 2]
         sounds["plane"].play(-1)  # Start the plane sound;
         # self.terminate_count_down = 60
         self.terminate = False
@@ -382,9 +383,13 @@ class Game(object):
             self.score += SCORE_STAY_ONE_FRAME
         else:
             accuracy = 1.0 * self.enemyHit / self.missileShot if self.missileShot > 0 else 0
-            print "Your score: %d, Accuracy: %.2f" % (self.score, accuracy)            
+            print "Total score: %d, Missile Fired: %d, Enemy down: %d, Accuracy: %.2f" % (self.score, self.missileShot, self.enemyHit, accuracy)
+            self.missileShot = 0
+            self.enemyHit = 0            
             # self.score = SCORE_LOSE
             self.running = False
+            if self.aiPlayer_normalEnemy or self.aiPlayer_aiEnemy:
+                self.start_game()
             # if self.terminate_count_down == 0:
             #     self.running = False
             # else:
